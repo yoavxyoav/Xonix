@@ -101,6 +101,7 @@ class Game {
             if (enemy.type === 'basic' && !this.player.hasShield) {
                 const hitTrail = enemy.checkTrailCollision(this.grid);
                 if (hitTrail) {
+                    console.log('DEATH: Enemy touched trail!');
                     this.handleDeath();
                     return;
                 }
@@ -110,6 +111,7 @@ class Game {
         // Check player collision with enemies
         const playerHit = this.player.checkEnemyCollision(this.enemies);
         if (playerHit) {
+            console.log('DEATH: Player hit by enemy!');
             this.handleDeath();
             return;
         }
@@ -131,6 +133,10 @@ class Game {
         const percentClaimed = cellsClaimed / this.grid.totalClaimable;
         const scoreGained = Math.floor(percentClaimed * 100 * CONSTANTS.SCORE_PER_PERCENT);
         this.state.score += scoreGained;
+
+        // Debug: log capture info
+        console.log(`Captured ${cellsClaimed} cells (${(percentClaimed * 100).toFixed(1)}% this capture)`);
+        console.log(`Total claimed: ${this.grid.claimedCount} / ${this.grid.totalClaimable} = ${(this.grid.getFillPercentage() * 100).toFixed(1)}%`);
 
         // Play sound
         audioManager.playCapture();
@@ -309,9 +315,8 @@ class Game {
             ctx.fillStyle = '#ff0';
             ctx.font = '10px monospace';
             ctx.textAlign = 'center';
-            const debugY = CONSTANTS.CANVAS_HEIGHT / 2 + 100;
-            ctx.fillText(`Player: (${Math.round(this.player.x)}, ${Math.round(this.player.y)}) dx:${this.player.dx} dy:${this.player.dy}`, CONSTANTS.CANVAS_WIDTH / 2, debugY);
-            ctx.fillText(`isDrawing: ${this.player.isDrawing} | Screen: ${this.state.screen} | Shield: ${this.player.hasShield}`, CONSTANTS.CANVAS_WIDTH / 2, debugY + 15);
+            ctx.fillText(`Player: (${Math.round(this.player.x)}, ${Math.round(this.player.y)}) dx:${this.player.dx} dy:${this.player.dy}`, CONSTANTS.CANVAS_WIDTH / 2, CONSTANTS.CANVAS_HEIGHT - 30);
+            ctx.fillText(`isDrawing: ${this.player.isDrawing} | Screen: ${this.state.screen} | Shield: ${this.player.hasShield}`, CONSTANTS.CANVAS_WIDTH / 2, CONSTANTS.CANVAS_HEIGHT - 15);
         }
     }
 }

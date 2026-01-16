@@ -33,7 +33,9 @@ function init() {
 }
 
 function handleKeyDown(e) {
+    console.log('Key pressed:', e.key, 'Screen:', game.state.screen);
     game.handleKeyDown(e.key);
+    console.log('After key - Player dx:', game.player.dx, 'dy:', game.player.dy, 'isDrawing:', game.player.isDrawing);
 }
 
 function handleKeyUp(e) {
