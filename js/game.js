@@ -101,7 +101,6 @@ class Game {
             if (enemy.type === 'basic' && !this.player.hasShield) {
                 const hitTrail = enemy.checkTrailCollision(this.grid);
                 if (hitTrail) {
-                    console.log('DEATH: Enemy touched trail!');
                     this.handleDeath();
                     return;
                 }
@@ -111,7 +110,6 @@ class Game {
         // Check player collision with enemies
         const playerHit = this.player.checkEnemyCollision(this.enemies);
         if (playerHit) {
-            console.log('DEATH: Player hit by enemy!');
             this.handleDeath();
             return;
         }
@@ -133,10 +131,6 @@ class Game {
         const percentClaimed = cellsClaimed / this.grid.totalClaimable;
         const scoreGained = Math.floor(percentClaimed * 100 * CONSTANTS.SCORE_PER_PERCENT);
         this.state.score += scoreGained;
-
-        // Debug: log capture info
-        console.log(`Captured ${cellsClaimed} cells (${(percentClaimed * 100).toFixed(1)}% this capture)`);
-        console.log(`Total claimed: ${this.grid.claimedCount} / ${this.grid.totalClaimable} = ${(this.grid.getFillPercentage() * 100).toFixed(1)}%`);
 
         // Play sound
         audioManager.playCapture();

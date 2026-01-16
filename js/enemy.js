@@ -119,7 +119,6 @@ class BasicEnemy extends Enemy {
 
         for (const pos of positions) {
             if (grid.isTrail(pos.x, pos.y)) {
-                console.log('Enemy hit trail at', pos.x, pos.y);
                 return true;
             }
         }
