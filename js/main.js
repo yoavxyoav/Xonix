@@ -28,30 +28,58 @@ function init() {
         }
     });
 
-    // Start game loop
-    requestAnimationFrame(gameLoop);
+    // Game loop is started by startGameLoop() after init
 }
 
 function handleKeyDown(e) {
-    console.log('Key pressed:', e.key, 'Screen:', game.state.screen);
     game.handleKeyDown(e.key);
-    console.log('After key - Player dx:', game.player.dx, 'dy:', game.player.dy, 'isDrawing:', game.player.isDrawing);
 }
 
 function handleKeyUp(e) {
     game.handleKeyUp(e.key);
 }
 
-function gameLoop(timestamp) {
+function gameLoop() {
+    const now = performance.now();
+
     // Update game state
-    game.update(timestamp);
+    game.update(now);
 
     // Render
-    game.render(ctx, timestamp);
+    game.render(ctx, now);
+}
 
-    // Continue loop
-    requestAnimationFrame(gameLoop);
+// Use setInterval for consistent timing (browsers don't throttle this as much)
+let gameInterval;
+let wakeLock = null;
+
+// Request wake lock to prevent browser throttling
+async function requestWakeLock() {
+    try {
+        if ('wakeLock' in navigator) {
+            wakeLock = await navigator.wakeLock.request('screen');
+            console.log('Wake lock acquired');
+        }
+    } catch (err) {
+        console.log('Wake lock failed:', err);
+    }
+}
+
+function startGameLoop() {
+    // Run at ~60fps (16.67ms per frame)
+    gameInterval = setInterval(gameLoop, 16);
 }
 
 // Start when DOM is loaded
-document.addEventListener('DOMContentLoaded', init);
+document.addEventListener('DOMContentLoaded', () => {
+    init();
+    requestWakeLock();
+    startGameLoop();
+});
+
+// Re-acquire wake lock if page becomes visible again
+document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') {
+        requestWakeLock();
+    }
+});

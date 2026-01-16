@@ -34,8 +34,8 @@ class BasicEnemy extends Enemy {
         this.dy = Math.sin(angle);
     }
 
-    update(grid) {
-        const speed = this.getSpeed();
+    update(grid, timeScale = 1) {
+        const speed = this.getSpeed() * timeScale;
         if (speed === 0) return;
 
         const newX = this.x + this.dx * speed;
@@ -119,7 +119,6 @@ class BasicEnemy extends Enemy {
 
         for (const pos of positions) {
             if (grid.isTrail(pos.x, pos.y)) {
-                console.log('Enemy hit trail at', pos.x, pos.y);
                 return true;
             }
         }
@@ -166,8 +165,8 @@ class BorderEnemy extends Enemy {
         this.dy /= mag;
     }
 
-    update(grid) {
-        const speed = this.getSpeed();
+    update(grid, timeScale = 1) {
+        const speed = this.getSpeed() * timeScale;
         if (speed === 0) return;
 
         const newX = this.x + this.dx * speed;

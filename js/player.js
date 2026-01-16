@@ -43,12 +43,13 @@ class Player {
         this.dy = 0;
     }
 
-    update() {
+    update(timeScale = 1) {
         if (this.dx === 0 && this.dy === 0) return { status: 'idle' };
 
         const currentSpeed = this.speedBoost ? this.speed * 2 : this.speed;
-        let newX = this.x + this.dx * currentSpeed;
-        let newY = this.y + this.dy * currentSpeed;
+        const scaledSpeed = currentSpeed * timeScale;
+        let newX = this.x + this.dx * scaledSpeed;
+        let newY = this.y + this.dy * scaledSpeed;
 
         // Check boundaries (stay within the playable area)
         const minBound = CONSTANTS.CELL_SIZE / 2;

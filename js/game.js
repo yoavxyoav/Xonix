@@ -67,10 +67,23 @@ class Game {
     }
 
     update(currentTime) {
+        // Handle first frame or very long pauses
+        if (this.lastTime === 0) {
+            this.lastTime = currentTime;
+            return;
+        }
+
         const deltaTime = currentTime - this.lastTime;
         this.lastTime = currentTime;
 
         if (this.state.screen !== 'playing') return;
+
+        // Skip if deltaTime is too large (tab was in background)
+        if (deltaTime > 200) return;
+
+        // Calculate time scale (1.0 = 60fps, higher if slower)
+        const targetFrameTime = 1000 / 60; // ~16.67ms
+        const timeScale = Math.min(deltaTime / targetFrameTime, 3); // Cap at 3x to prevent tunneling
 
         // Death cooldown
         if (this.deathCooldown > 0) {
@@ -81,8 +94,8 @@ class Game {
         // Update power-ups FIRST (so shield protects immediately when collected)
         this.powerUpManager.update(this.grid, this.player, this.enemies, currentTime, this.state);
 
-        // Update player
-        const playerResult = this.player.update();
+        // Update player with time scaling
+        const playerResult = this.player.update(timeScale);
 
         if (playerResult.status === 'death') {
             this.handleDeath();
@@ -93,15 +106,14 @@ class Game {
             this.handleCapture();
         }
 
-        // Update enemies
+        // Update enemies with time scaling
         for (const enemy of this.enemies) {
-            enemy.update(this.grid);
+            enemy.update(this.grid, timeScale);
 
             // Check if enemy touches trail (shield protects)
             if (enemy.type === 'basic' && !this.player.hasShield) {
                 const hitTrail = enemy.checkTrailCollision(this.grid);
                 if (hitTrail) {
-                    console.log('DEATH: Enemy touched trail!');
                     this.handleDeath();
                     return;
                 }
@@ -111,7 +123,6 @@ class Game {
         // Check player collision with enemies
         const playerHit = this.player.checkEnemyCollision(this.enemies);
         if (playerHit) {
-            console.log('DEATH: Player hit by enemy!');
             this.handleDeath();
             return;
         }
@@ -133,10 +144,6 @@ class Game {
         const percentClaimed = cellsClaimed / this.grid.totalClaimable;
         const scoreGained = Math.floor(percentClaimed * 100 * CONSTANTS.SCORE_PER_PERCENT);
         this.state.score += scoreGained;
-
-        // Debug: log capture info
-        console.log(`Captured ${cellsClaimed} cells (${(percentClaimed * 100).toFixed(1)}% this capture)`);
-        console.log(`Total claimed: ${this.grid.claimedCount} / ${this.grid.totalClaimable} = ${(this.grid.getFillPercentage() * 100).toFixed(1)}%`);
 
         // Play sound
         audioManager.playCapture();
@@ -186,6 +193,9 @@ class Game {
     handleLevelComplete() {
         this.state.screen = 'levelcomplete';
         this.state.score += CONSTANTS.SCORE_LEVEL_BONUS;
+        this.powerUpManager.reset(); // Clear active power-ups
+        this.player.hasShield = false;
+        this.player.speedBoost = false;
         audioManager.playLevelUp();
     }
 
