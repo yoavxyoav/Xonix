@@ -6,6 +6,8 @@ class TouchControls {
         this.game = game;
         this.enabled = false;
         this.container = null;
+        this.tapArea = null;
+        this.orientationHint = null;
         this.activeButton = null;
 
         // Only initialize on touch-capable devices
@@ -22,13 +24,48 @@ class TouchControls {
 
     init() {
         this.enabled = true;
+        this.createOrientationHint();
+        this.createTapArea();
         this.createControls();
         this.attachEventListeners();
 
-        // Force landscape hint on mobile
+        // Check orientation on load and changes
         this.checkOrientation();
         window.addEventListener('resize', () => this.checkOrientation());
-        window.addEventListener('orientationchange', () => this.checkOrientation());
+        window.addEventListener('orientationchange', () => {
+            // Delay to let orientation settle
+            setTimeout(() => this.checkOrientation(), 100);
+        });
+    }
+
+    createOrientationHint() {
+        this.orientationHint = document.createElement('div');
+        this.orientationHint.className = 'orientation-hint';
+        this.orientationHint.innerHTML = `
+            <div class="orientation-icon">📱</div>
+            <div class="orientation-text">Rotate your device</div>
+            <div class="orientation-subtext">for the best experience</div>
+        `;
+        document.body.appendChild(this.orientationHint);
+    }
+
+    createTapArea() {
+        // Create tap-to-start overlay
+        this.tapArea = document.createElement('div');
+        this.tapArea.className = 'touch-tap-area';
+        this.tapArea.innerHTML = '<span>TAP TO START</span>';
+        document.body.appendChild(this.tapArea);
+
+        // Handle tap to start
+        this.tapArea.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            this.game.handleKeyDown(' ');
+        }, { passive: false });
+
+        this.tapArea.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            this.game.handleKeyUp(' ');
+        }, { passive: false });
     }
 
     createControls() {
@@ -48,10 +85,10 @@ class TouchControls {
 
         // Create arrow buttons
         const arrows = [
-            { dir: 'up', symbol: '&#9650;', key: 'ArrowUp' },
-            { dir: 'left', symbol: '&#9664;', key: 'ArrowLeft' },
-            { dir: 'right', symbol: '&#9654;', key: 'ArrowRight' },
-            { dir: 'down', symbol: '&#9660;', key: 'ArrowDown' }
+            { dir: 'up', symbol: '▲', key: 'ArrowUp' },
+            { dir: 'left', symbol: '◀', key: 'ArrowLeft' },
+            { dir: 'right', symbol: '▶', key: 'ArrowRight' },
+            { dir: 'down', symbol: '▼', key: 'ArrowDown' }
         ];
 
         arrows.forEach(arrow => {
@@ -151,19 +188,32 @@ class TouchControls {
 
         const isPortrait = window.innerHeight > window.innerWidth;
 
-        // Show/hide orientation hint
-        let hint = document.querySelector('.orientation-hint');
-
         if (isPortrait) {
-            if (!hint) {
-                hint = document.createElement('div');
-                hint.className = 'orientation-hint';
-                hint.innerHTML = '<div class="orientation-icon">&#128241;</div><div>Rotate device for best experience</div>';
-                document.body.appendChild(hint);
+            this.orientationHint.classList.add('visible');
+        } else {
+            this.orientationHint.classList.remove('visible');
+        }
+    }
+
+    // Called by game to update tap area visibility based on game state
+    updateGameState(screen) {
+        if (!this.enabled) return;
+
+        // Show tap area on menu, gameover, levelcomplete screens
+        const showTapArea = ['menu', 'gameover', 'levelcomplete'].includes(screen);
+
+        if (showTapArea) {
+            this.tapArea.classList.add('visible');
+            // Update text based on screen
+            if (screen === 'menu') {
+                this.tapArea.innerHTML = '<span>TAP TO START</span>';
+            } else if (screen === 'gameover') {
+                this.tapArea.innerHTML = '<span>TAP TO RETRY</span>';
+            } else if (screen === 'levelcomplete') {
+                this.tapArea.innerHTML = '<span>TAP TO CONTINUE</span>';
             }
-            hint.style.display = 'flex';
-        } else if (hint) {
-            hint.style.display = 'none';
+        } else {
+            this.tapArea.classList.remove('visible');
         }
     }
 

@@ -3,6 +3,9 @@
 class UI {
     constructor() {
         this.fontLoaded = false;
+        this.isTouchDevice = ('ontouchstart' in window) ||
+                            (navigator.maxTouchPoints > 0) ||
+                            (navigator.msMaxTouchPoints > 0);
     }
 
     render(ctx, gameState, showProgressBar = true) {
@@ -57,7 +60,12 @@ class UI {
         ctx.fillStyle = theme.text;
         ctx.font = `14px ${font}`;
 
-        const instructions = [
+        const instructions = this.isTouchDevice ? [
+            'Use D-PAD to move',
+            'Capture territory by drawing lines',
+            'Avoid enemies!',
+            'Fill the required % to advance'
+        ] : [
             'Use ARROW KEYS to move',
             'Capture territory by drawing lines',
             'Avoid enemies!',
@@ -81,10 +89,12 @@ class UI {
             ctx.shadowBlur = 0;
         }
 
-        // Controls hint
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
-        ctx.font = `10px ${font}`;
-        ctx.fillText('P = Pause | N = Mute | M = Bar | T = Theme', CONSTANTS.CANVAS_WIDTH / 2, 550);
+        // Controls hint - only show on non-touch devices
+        if (!this.isTouchDevice) {
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+            ctx.font = `10px ${font}`;
+            ctx.fillText('P = Pause | N = Mute | M = Bar | T = Theme', CONSTANTS.CANVAS_WIDTH / 2, 550);
+        }
 
         // Attribution
         ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
@@ -297,10 +307,12 @@ class UI {
             ctx.shadowBlur = 0;
         }
 
-        // Restart hint
-        ctx.fillStyle = theme.text;
-        ctx.font = `14px ${font}`;
-        ctx.fillText('Press SPACE to restart', CONSTANTS.CANVAS_WIDTH / 2, CONSTANTS.CANVAS_HEIGHT / 2 + 100);
+        // Restart hint - only on non-touch devices
+        if (!this.isTouchDevice) {
+            ctx.fillStyle = theme.text;
+            ctx.font = `14px ${font}`;
+            ctx.fillText('Press SPACE to restart', CONSTANTS.CANVAS_WIDTH / 2, CONSTANTS.CANVAS_HEIGHT / 2 + 100);
+        }
     }
 
     renderLevelComplete(ctx, gameState) {
@@ -328,9 +340,11 @@ class UI {
         ctx.font = `18px ${font}`;
         ctx.fillText(`+${CONSTANTS.SCORE_LEVEL_BONUS} BONUS`, CONSTANTS.CANVAS_WIDTH / 2, CONSTANTS.CANVAS_HEIGHT / 2 + 10);
 
-        // Next level hint
-        ctx.fillStyle = theme.text;
-        ctx.font = `14px ${font}`;
-        ctx.fillText('Press SPACE for next level', CONSTANTS.CANVAS_WIDTH / 2, CONSTANTS.CANVAS_HEIGHT / 2 + 70);
+        // Next level hint - only on non-touch devices
+        if (!this.isTouchDevice) {
+            ctx.fillStyle = theme.text;
+            ctx.font = `14px ${font}`;
+            ctx.fillText('Press SPACE for next level', CONSTANTS.CANVAS_WIDTH / 2, CONSTANTS.CANVAS_HEIGHT / 2 + 70);
+        }
     }
 }

@@ -49,6 +49,11 @@ function gameLoop(timestamp) {
     // Render
     game.render(ctx, timestamp);
 
+    // Update touch controls visibility based on game state
+    if (touchControls && touchControls.enabled) {
+        touchControls.updateGameState(game.screen);
+    }
+
     // Request next frame
     requestAnimationFrame(gameLoop);
 }
