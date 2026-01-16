@@ -169,42 +169,64 @@ class BorderEnemy extends Enemy {
         const speed = this.getSpeed() * timeScale;
         if (speed === 0) return;
 
+        const halfSize = this.size / 2;
+        const borderPixels = CONSTANTS.CELL_SIZE * CONSTANTS.BORDER_SIZE; // 20 pixels
+
         const newX = this.x + this.dx * speed;
         const newY = this.y + this.dy * speed;
 
-        // Check grid position
-        const newGridPos = grid.pixelToGrid(newX, newY);
-        const newCell = grid.getCell(newGridPos.x, newGridPos.y);
-
-        // Border enemy stays in safe zones (border or claimed)
-        // Bounces off empty cells and trail
-        const isSafe = newCell === CONSTANTS.CELL_BORDER || newCell === CONSTANTS.CELL_CLAIMED;
-
-        if (!isSafe || newX < this.size || newX > CONSTANTS.CANVAS_WIDTH - this.size ||
-            newY < this.size || newY > CONSTANTS.CANVAS_HEIGHT - this.size) {
-            // Bounce - try horizontal bounce first
-            const testX = this.x + this.dx * speed;
-            const testGridX = grid.pixelToGrid(testX, this.y);
-            const testCellX = grid.getCell(testGridX.x, testGridX.y);
-            const isSafeX = testCellX === CONSTANTS.CELL_BORDER || testCellX === CONSTANTS.CELL_CLAIMED;
-
-            if (!isSafeX || testX < this.size || testX > CONSTANTS.CANVAS_WIDTH - this.size) {
-                this.dx = -this.dx;
+        // Check if position is safe (all corners must be in border or claimed)
+        const isSafeAt = (x, y) => {
+            // Check all corners of the enemy
+            const positions = [
+                grid.pixelToGrid(x - halfSize, y - halfSize),
+                grid.pixelToGrid(x + halfSize, y - halfSize),
+                grid.pixelToGrid(x - halfSize, y + halfSize),
+                grid.pixelToGrid(x + halfSize, y + halfSize)
+            ];
+            for (const pos of positions) {
+                const cell = grid.getCell(pos.x, pos.y);
+                if (cell !== CONSTANTS.CELL_BORDER && cell !== CONSTANTS.CELL_CLAIMED) {
+                    return false;
+                }
             }
+            return true;
+        };
 
-            // Try vertical bounce
-            const testY = this.y + this.dy * speed;
-            const testGridY = grid.pixelToGrid(this.x, testY);
-            const testCellY = grid.getCell(testGridY.x, testGridY.y);
-            const isSafeY = testCellY === CONSTANTS.CELL_BORDER || testCellY === CONSTANTS.CELL_CLAIMED;
+        // Check canvas boundaries (keep enemy fully visible)
+        const inBounds = (x, y) => {
+            return x >= halfSize && x <= CONSTANTS.CANVAS_WIDTH - halfSize &&
+                   y >= halfSize && y <= CONSTANTS.CANVAS_HEIGHT - halfSize;
+        };
 
-            if (!isSafeY || testY < this.size || testY > CONSTANTS.CANVAS_HEIGHT - this.size) {
-                this.dy = -this.dy;
-            }
-        } else {
-            this.x = newX;
-            this.y = newY;
+        let bounceX = false;
+        let bounceY = false;
+
+        // Check X movement
+        if (!inBounds(newX, this.y) || !isSafeAt(newX, this.y)) {
+            bounceX = true;
         }
+
+        // Check Y movement
+        if (!inBounds(this.x, newY) || !isSafeAt(this.x, newY)) {
+            bounceY = true;
+        }
+
+        // Apply bounces
+        if (bounceX) this.dx = -this.dx;
+        if (bounceY) this.dy = -this.dy;
+
+        // Move if no bounce, otherwise stay in place
+        if (!bounceX && !bounceY) {
+            if (inBounds(newX, newY) && isSafeAt(newX, newY)) {
+                this.x = newX;
+                this.y = newY;
+            }
+        }
+
+        // Clamp to stay within canvas
+        this.x = Math.max(halfSize, Math.min(CONSTANTS.CANVAS_WIDTH - halfSize, this.x));
+        this.y = Math.max(halfSize, Math.min(CONSTANTS.CANVAS_HEIGHT - halfSize, this.y));
     }
 
     render(ctx) {

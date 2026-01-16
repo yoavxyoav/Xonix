@@ -21,6 +21,7 @@ class Game {
 
         this.lastTime = 0;
         this.deathCooldown = 0;
+        this.deathFreeze = 0; // Freeze to show death snapshot
         this.showDebug = false; // Toggle with 'D' key
         this.showProgressBar = true; // Toggle with 'M' key
     }
@@ -85,7 +86,16 @@ class Game {
         const targetFrameTime = 1000 / 60; // ~16.67ms
         const timeScale = Math.min(deltaTime / targetFrameTime, 3); // Cap at 3x to prevent tunneling
 
-        // Death cooldown
+        // Death freeze - show snapshot of how death happened
+        if (this.deathFreeze > 0) {
+            this.deathFreeze -= deltaTime;
+            if (this.deathFreeze <= 0) {
+                this.resetAfterDeath();
+            }
+            return;
+        }
+
+        // Death cooldown after respawn
         if (this.deathCooldown > 0) {
             this.deathCooldown -= deltaTime;
             return;
@@ -153,20 +163,25 @@ class Game {
         this.state.lives--;
         audioManager.playDeath();
 
-        // Clear trail
-        this.grid.clearTrail();
-
         if (this.state.lives <= 0) {
             this.handleGameOver();
         } else {
-            // Reset player position
-            this.player.reset();
-
-            // Move border enemies FAR from player spawn (top-center)
-            this.repositionBorderEnemies();
-
-            this.deathCooldown = 1000; // 1 second cooldown
+            // Freeze for 1 second to show death snapshot, then reset
+            this.deathFreeze = 1000;
         }
+    }
+
+    resetAfterDeath() {
+        // Clear trail
+        this.grid.clearTrail();
+
+        // Reset player position
+        this.player.reset();
+
+        // Move border enemies FAR from player spawn (top-center)
+        this.repositionBorderEnemies();
+
+        this.deathCooldown = 500; // Brief cooldown after respawn
     }
 
     repositionBorderEnemies() {
@@ -325,8 +340,8 @@ class Game {
             ctx.fillStyle = '#ff0';
             ctx.font = '10px monospace';
             ctx.textAlign = 'center';
-            ctx.fillText(`Player: (${Math.round(this.player.x)}, ${Math.round(this.player.y)}) dx:${this.player.dx} dy:${this.player.dy}`, CONSTANTS.CANVAS_WIDTH / 2, CONSTANTS.CANVAS_HEIGHT - 30);
-            ctx.fillText(`isDrawing: ${this.player.isDrawing} | Screen: ${this.state.screen} | Shield: ${this.player.hasShield}`, CONSTANTS.CANVAS_WIDTH / 2, CONSTANTS.CANVAS_HEIGHT - 15);
+            ctx.fillText(`Player: (${Math.round(this.player.x)}, ${Math.round(this.player.y)}) dx:${this.player.dx} dy:${this.player.dy}`, CONSTANTS.CANVAS_WIDTH / 2, CONSTANTS.CANVAS_HEIGHT / 2 - 8);
+            ctx.fillText(`isDrawing: ${this.player.isDrawing} | Screen: ${this.state.screen} | Shield: ${this.player.hasShield}`, CONSTANTS.CANVAS_WIDTH / 2, CONSTANTS.CANVAS_HEIGHT / 2 + 8);
         }
     }
 }
