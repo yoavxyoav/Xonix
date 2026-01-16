@@ -315,8 +315,9 @@ class Game {
             ctx.fillStyle = '#ff0';
             ctx.font = '10px monospace';
             ctx.textAlign = 'center';
-            ctx.fillText(`Player: (${Math.round(this.player.x)}, ${Math.round(this.player.y)}) dx:${this.player.dx} dy:${this.player.dy}`, CONSTANTS.CANVAS_WIDTH / 2, CONSTANTS.CANVAS_HEIGHT - 30);
-            ctx.fillText(`isDrawing: ${this.player.isDrawing} | Screen: ${this.state.screen} | Shield: ${this.player.hasShield}`, CONSTANTS.CANVAS_WIDTH / 2, CONSTANTS.CANVAS_HEIGHT - 15);
+            const debugY = CONSTANTS.CANVAS_HEIGHT / 2 + 100;
+            ctx.fillText(`Player: (${Math.round(this.player.x)}, ${Math.round(this.player.y)}) dx:${this.player.dx} dy:${this.player.dy}`, CONSTANTS.CANVAS_WIDTH / 2, debugY);
+            ctx.fillText(`isDrawing: ${this.player.isDrawing} | Screen: ${this.state.screen} | Shield: ${this.player.hasShield}`, CONSTANTS.CANVAS_WIDTH / 2, debugY + 15);
         }
     }
 }
