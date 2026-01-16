@@ -1,0 +1,12 @@
+# Project management files
+CLAUDE.md
+bugfix.md
+projectplan.md
+prompts.txt
+
+# OS files
+.DS_Store
+
+# IDE
+.idea/
+.vscode/
