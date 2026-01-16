@@ -1,0 +1,128 @@
+/* Xonix Neon Edition - Styles */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background: #000;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-family: 'Press Start 2P', monospace;
+    overflow: hidden;
+}
+
+/* Animated gradient background */
+body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background:
+        radial-gradient(ellipse at 20% 80%, rgba(138, 43, 226, 0.15) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 20%, rgba(0, 255, 255, 0.1) 0%, transparent 50%),
+        radial-gradient(ellipse at 50% 50%, rgba(255, 0, 255, 0.05) 0%, transparent 70%),
+        linear-gradient(180deg, #0a0a1a 0%, #1a0a2a 50%, #0a1a2a 100%);
+    z-index: -1;
+}
+
+.game-container {
+    position: relative;
+    border: 3px solid #00ffff;
+    border-radius: 5px;
+    box-shadow:
+        0 0 20px rgba(0, 255, 255, 0.5),
+        0 0 40px rgba(0, 255, 255, 0.3),
+        0 0 60px rgba(0, 255, 255, 0.1),
+        inset 0 0 20px rgba(0, 255, 255, 0.1);
+}
+
+#gameCanvas {
+    display: block;
+    background: #0a0a1a;
+}
+
+/* CRT Scanline effect */
+.scanlines {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    background: repeating-linear-gradient(
+        0deg,
+        rgba(0, 0, 0, 0.15),
+        rgba(0, 0, 0, 0.15) 1px,
+        transparent 1px,
+        transparent 2px
+    );
+    z-index: 10;
+}
+
+/* CRT flicker effect (subtle) */
+.game-container::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    background: rgba(0, 255, 255, 0.02);
+    animation: flicker 0.15s infinite;
+    z-index: 11;
+}
+
+@keyframes flicker {
+    0% { opacity: 0.97; }
+    50% { opacity: 1; }
+    100% { opacity: 0.98; }
+}
+
+/* Glow pulse animation for the border */
+.game-container {
+    animation: borderGlow 3s ease-in-out infinite;
+}
+
+@keyframes borderGlow {
+    0%, 100% {
+        box-shadow:
+            0 0 20px rgba(0, 255, 255, 0.5),
+            0 0 40px rgba(0, 255, 255, 0.3),
+            0 0 60px rgba(0, 255, 255, 0.1),
+            inset 0 0 20px rgba(0, 255, 255, 0.1);
+    }
+    50% {
+        box-shadow:
+            0 0 30px rgba(0, 255, 255, 0.7),
+            0 0 50px rgba(0, 255, 255, 0.5),
+            0 0 80px rgba(0, 255, 255, 0.2),
+            inset 0 0 30px rgba(0, 255, 255, 0.15);
+    }
+}
+
+/* Mobile responsive */
+@media (max-width: 850px) {
+    .game-container {
+        transform: scale(0.9);
+    }
+}
+
+@media (max-width: 750px) {
+    .game-container {
+        transform: scale(0.75);
+    }
+}
+
+@media (max-width: 600px) {
+    .game-container {
+        transform: scale(0.5);
+    }
+}

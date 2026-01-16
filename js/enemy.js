@@ -1,0 +1,258 @@
+// Enemy classes
+
+// Base enemy class
+class Enemy {
+    constructor(x, y, type) {
+        this.x = x;
+        this.y = y;
+        this.type = type;
+        this.size = CONSTANTS.ENEMY_SIZE;
+        this.frozen = false;
+        this.slowMo = false;
+    }
+
+    getSpeed() {
+        if (this.frozen) return 0;
+        if (this.slowMo) return this.baseSpeed * 0.5;
+        return this.baseSpeed;
+    }
+
+    render(ctx) {
+        // Override in subclasses
+    }
+}
+
+// Basic enemy - bounces around in unclaimed territory
+class BasicEnemy extends Enemy {
+    constructor(x, y) {
+        super(x, y, 'basic');
+        this.baseSpeed = CONSTANTS.ENEMY_BASE_SPEED;
+
+        // Random initial direction
+        const angle = Math.random() * Math.PI * 2;
+        this.dx = Math.cos(angle);
+        this.dy = Math.sin(angle);
+    }
+
+    update(grid) {
+        const speed = this.getSpeed();
+        if (speed === 0) return;
+
+        const newX = this.x + this.dx * speed;
+        const newY = this.y + this.dy * speed;
+
+        // Check collision with walls (border, claimed, or trail)
+        const gridPos = grid.pixelToGrid(newX, newY);
+        const cell = grid.getCell(gridPos.x, gridPos.y);
+
+        // Check each direction for bouncing
+        const gridPosX = grid.pixelToGrid(newX, this.y);
+        const gridPosY = grid.pixelToGrid(this.x, newY);
+
+        const cellX = grid.getCell(gridPosX.x, gridPosX.y);
+        const cellY = grid.getCell(gridPosY.x, gridPosY.y);
+
+        let bounced = false;
+
+        // Bounce off non-empty cells
+        if (cellX !== CONSTANTS.CELL_EMPTY) {
+            this.dx = -this.dx;
+            bounced = true;
+        }
+
+        if (cellY !== CONSTANTS.CELL_EMPTY) {
+            this.dy = -this.dy;
+            bounced = true;
+        }
+
+        // Move if no collision
+        if (!bounced || cell === CONSTANTS.CELL_EMPTY) {
+            // Check boundaries
+            if (newX > this.size / 2 && newX < CONSTANTS.CANVAS_WIDTH - this.size / 2) {
+                this.x = newX;
+            } else {
+                this.dx = -this.dx;
+            }
+
+            if (newY > this.size / 2 && newY < CONSTANTS.CANVAS_HEIGHT - this.size / 2) {
+                this.y = newY;
+            } else {
+                this.dy = -this.dy;
+            }
+        }
+
+        // If stuck in claimed area, try to escape
+        const currentCell = grid.getCell(gridPos.x, gridPos.y);
+        if (currentCell !== CONSTANTS.CELL_EMPTY) {
+            this.escapeToEmpty(grid);
+        }
+    }
+
+    escapeToEmpty(grid) {
+        // Try to find nearest empty cell
+        const gridPos = grid.pixelToGrid(this.x, this.y);
+        const directions = [[1, 0], [-1, 0], [0, 1], [0, -1]];
+
+        for (const [dx, dy] of directions) {
+            const checkX = gridPos.x + dx;
+            const checkY = gridPos.y + dy;
+            if (grid.getCell(checkX, checkY) === CONSTANTS.CELL_EMPTY) {
+                const pixel = grid.gridToPixel(checkX, checkY);
+                this.x = pixel.x;
+                this.y = pixel.y;
+                return;
+            }
+        }
+    }
+
+    // Check if enemy touches player trail (check all corners of enemy)
+    checkTrailCollision(grid) {
+        const halfSize = this.size / 2;
+        // Check center and all corners
+        const positions = [
+            grid.pixelToGrid(this.x, this.y),
+            grid.pixelToGrid(this.x - halfSize, this.y),
+            grid.pixelToGrid(this.x + halfSize, this.y),
+            grid.pixelToGrid(this.x, this.y - halfSize),
+            grid.pixelToGrid(this.x, this.y + halfSize)
+        ];
+
+        for (const pos of positions) {
+            if (grid.isTrail(pos.x, pos.y)) {
+                console.log('Enemy hit trail at', pos.x, pos.y);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    render(ctx) {
+        ctx.shadowColor = CONSTANTS.COLORS.ENEMY_BASIC_GLOW;
+        ctx.shadowBlur = 15;
+        ctx.fillStyle = CONSTANTS.COLORS.ENEMY_BASIC;
+
+        // Draw as diamond shape
+        ctx.beginPath();
+        ctx.moveTo(this.x, this.y - this.size / 2);
+        ctx.lineTo(this.x + this.size / 2, this.y);
+        ctx.lineTo(this.x, this.y + this.size / 2);
+        ctx.lineTo(this.x - this.size / 2, this.y);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.shadowBlur = 0;
+    }
+}
+
+// Border enemy - bounces within the safe zone (border + claimed areas)
+// Kills player on contact (even on the border!)
+class BorderEnemy extends Enemy {
+    constructor(x, y) {
+        super(x, y, 'border');
+        this.baseSpeed = CONSTANTS.BORDER_ENEMY_SPEED * 1.2;
+        // Gentler angle - mostly horizontal or vertical with slight diagonal
+        const primaryDir = Math.random() > 0.5 ? 1 : -1;
+        const secondaryDir = (Math.random() > 0.5 ? 1 : -1) * 0.3; // Less diagonal
+        if (Math.random() > 0.5) {
+            this.dx = primaryDir;
+            this.dy = secondaryDir;
+        } else {
+            this.dx = secondaryDir;
+            this.dy = primaryDir;
+        }
+        // Normalize
+        const mag = Math.sqrt(this.dx * this.dx + this.dy * this.dy);
+        this.dx /= mag;
+        this.dy /= mag;
+    }
+
+    update(grid) {
+        const speed = this.getSpeed();
+        if (speed === 0) return;
+
+        const newX = this.x + this.dx * speed;
+        const newY = this.y + this.dy * speed;
+
+        // Check grid position
+        const newGridPos = grid.pixelToGrid(newX, newY);
+        const newCell = grid.getCell(newGridPos.x, newGridPos.y);
+
+        // Border enemy stays in safe zones (border or claimed)
+        // Bounces off empty cells and trail
+        const isSafe = newCell === CONSTANTS.CELL_BORDER || newCell === CONSTANTS.CELL_CLAIMED;
+
+        if (!isSafe || newX < this.size || newX > CONSTANTS.CANVAS_WIDTH - this.size ||
+            newY < this.size || newY > CONSTANTS.CANVAS_HEIGHT - this.size) {
+            // Bounce - try horizontal bounce first
+            const testX = this.x + this.dx * speed;
+            const testGridX = grid.pixelToGrid(testX, this.y);
+            const testCellX = grid.getCell(testGridX.x, testGridX.y);
+            const isSafeX = testCellX === CONSTANTS.CELL_BORDER || testCellX === CONSTANTS.CELL_CLAIMED;
+
+            if (!isSafeX || testX < this.size || testX > CONSTANTS.CANVAS_WIDTH - this.size) {
+                this.dx = -this.dx;
+            }
+
+            // Try vertical bounce
+            const testY = this.y + this.dy * speed;
+            const testGridY = grid.pixelToGrid(this.x, testY);
+            const testCellY = grid.getCell(testGridY.x, testGridY.y);
+            const isSafeY = testCellY === CONSTANTS.CELL_BORDER || testCellY === CONSTANTS.CELL_CLAIMED;
+
+            if (!isSafeY || testY < this.size || testY > CONSTANTS.CANVAS_HEIGHT - this.size) {
+                this.dy = -this.dy;
+            }
+        } else {
+            this.x = newX;
+            this.y = newY;
+        }
+    }
+
+    render(ctx) {
+        ctx.shadowColor = CONSTANTS.COLORS.ENEMY_BORDER_GLOW;
+        ctx.shadowBlur = 15;
+        ctx.fillStyle = CONSTANTS.COLORS.ENEMY_BORDER;
+
+        // Draw as square
+        ctx.fillRect(
+            this.x - this.size / 2,
+            this.y - this.size / 2,
+            this.size,
+            this.size
+        );
+
+        ctx.shadowBlur = 0;
+    }
+}
+
+// Factory function to create enemies for a level
+function createEnemiesForLevel(level, grid) {
+    const enemies = [];
+    const levelData = CONSTANTS.LEVELS[Math.min(level - 1, CONSTANTS.LEVELS.length - 1)];
+
+    // Create basic enemies in random positions within the play area
+    for (let i = 0; i < levelData.basicEnemies; i++) {
+        const x = CONSTANTS.CELL_SIZE * (CONSTANTS.BORDER_SIZE + 5) +
+                  Math.random() * (CONSTANTS.CANVAS_WIDTH - CONSTANTS.CELL_SIZE * (CONSTANTS.BORDER_SIZE + 10));
+        const y = CONSTANTS.CELL_SIZE * (CONSTANTS.BORDER_SIZE + 5) +
+                  Math.random() * (CONSTANTS.CANVAS_HEIGHT - CONSTANTS.CELL_SIZE * (CONSTANTS.BORDER_SIZE + 10));
+        enemies.push(new BasicEnemy(x, y));
+    }
+
+    // Create border enemies (bounce within safe zones)
+    // Spawn FAR from player (who starts at top-center)
+    for (let i = 0; i < levelData.borderEnemies; i++) {
+        const borderSize = CONSTANTS.CELL_SIZE * CONSTANTS.BORDER_SIZE;
+        // Spawn at bottom and sides - far from player at top-center
+        const startPositions = [
+            { x: borderSize / 2, y: CONSTANTS.CANVAS_HEIGHT - borderSize / 2 },  // Bottom-left
+            { x: CONSTANTS.CANVAS_WIDTH - borderSize / 2, y: CONSTANTS.CANVAS_HEIGHT - borderSize / 2 },  // Bottom-right
+            { x: borderSize / 2, y: CONSTANTS.CANVAS_HEIGHT / 2 },  // Left-middle
+            { x: CONSTANTS.CANVAS_WIDTH - borderSize / 2, y: CONSTANTS.CANVAS_HEIGHT / 2 }  // Right-middle
+        ];
+        const pos = startPositions[i % startPositions.length];
+        enemies.push(new BorderEnemy(pos.x, pos.y));
+    }
+
+    return enemies;
+}
