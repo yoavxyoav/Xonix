@@ -1,6 +1,6 @@
 // Main entry point and game loop
 
-let canvas, ctx, game;
+let canvas, ctx, game, touchControls;
 
 function init() {
     // Get canvas and context
@@ -16,6 +16,9 @@ function init() {
 
     // Create game instance
     game = new Game();
+
+    // Initialize touch controls for mobile devices
+    touchControls = new TouchControls(game);
 
     // Set up input handlers
     document.addEventListener('keydown', handleKeyDown);
