@@ -127,18 +127,37 @@ class BasicEnemy extends Enemy {
     }
 
     render(ctx) {
-        ctx.shadowColor = CONSTANTS.COLORS.ENEMY_BASIC_GLOW;
-        ctx.shadowBlur = 15;
-        ctx.fillStyle = CONSTANTS.COLORS.ENEMY_BASIC;
+        const theme = themeManager.get();
 
-        // Draw as diamond shape
-        ctx.beginPath();
-        ctx.moveTo(this.x, this.y - this.size / 2);
-        ctx.lineTo(this.x + this.size / 2, this.y);
-        ctx.lineTo(this.x, this.y + this.size / 2);
-        ctx.lineTo(this.x - this.size / 2, this.y);
-        ctx.closePath();
-        ctx.fill();
+        if (theme.useGlow) {
+            ctx.shadowColor = theme.enemyBasicGlow;
+            ctx.shadowBlur = theme.glowIntensity;
+        }
+        ctx.fillStyle = theme.enemyBasic;
+
+        if (theme.pixelated) {
+            // Neon theme: Draw as diamond shape
+            ctx.beginPath();
+            ctx.moveTo(this.x, this.y - this.size / 2);
+            ctx.lineTo(this.x + this.size / 2, this.y);
+            ctx.lineTo(this.x, this.y + this.size / 2);
+            ctx.lineTo(this.x - this.size / 2, this.y);
+            ctx.closePath();
+            ctx.fill();
+        } else {
+            // Modern theme: Draw as smooth circle with gradient
+            const gradient = ctx.createRadialGradient(
+                this.x - 2, this.y - 2, 0,
+                this.x, this.y, this.size / 2
+            );
+            gradient.addColorStop(0, '#ffffff');
+            gradient.addColorStop(0.3, theme.enemyBasic);
+            gradient.addColorStop(1, theme.enemyBasicGlow);
+            ctx.fillStyle = gradient;
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.size / 2, 0, Math.PI * 2);
+            ctx.fill();
+        }
 
         ctx.shadowBlur = 0;
     }
@@ -232,17 +251,52 @@ class BorderEnemy extends Enemy {
     }
 
     render(ctx) {
-        ctx.shadowColor = CONSTANTS.COLORS.ENEMY_BORDER_GLOW;
-        ctx.shadowBlur = 15;
-        ctx.fillStyle = CONSTANTS.COLORS.ENEMY_BORDER;
+        const theme = themeManager.get();
 
-        // Draw as square
-        ctx.fillRect(
-            this.x - this.size / 2,
-            this.y - this.size / 2,
-            this.size,
-            this.size
-        );
+        if (theme.useGlow) {
+            ctx.shadowColor = theme.enemyBorderGlow;
+            ctx.shadowBlur = theme.glowIntensity;
+        }
+        ctx.fillStyle = theme.enemyBorder;
+
+        if (theme.pixelated) {
+            // Neon theme: Draw as square
+            ctx.fillRect(
+                this.x - this.size / 2,
+                this.y - this.size / 2,
+                this.size,
+                this.size
+            );
+        } else {
+            // Modern theme: Draw as rounded rectangle with gradient
+            const gradient = ctx.createRadialGradient(
+                this.x - 2, this.y - 2, 0,
+                this.x, this.y, this.size / 2
+            );
+            gradient.addColorStop(0, '#ffffff');
+            gradient.addColorStop(0.3, theme.enemyBorder);
+            gradient.addColorStop(1, theme.enemyBorderGlow);
+            ctx.fillStyle = gradient;
+
+            // Rounded rectangle
+            const r = 3;
+            const x = this.x - this.size / 2;
+            const y = this.y - this.size / 2;
+            const w = this.size;
+            const h = this.size;
+            ctx.beginPath();
+            ctx.moveTo(x + r, y);
+            ctx.lineTo(x + w - r, y);
+            ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+            ctx.lineTo(x + w, y + h - r);
+            ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+            ctx.lineTo(x + r, y + h);
+            ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+            ctx.lineTo(x, y + r);
+            ctx.quadraticCurveTo(x, y, x + r, y);
+            ctx.closePath();
+            ctx.fill();
+        }
 
         ctx.shadowBlur = 0;
     }

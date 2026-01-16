@@ -31,12 +31,13 @@ class PowerUp {
     }
 
     getColor() {
+        const theme = themeManager.get();
         switch (this.type) {
-            case POWERUP_TYPES.SPEED: return CONSTANTS.COLORS.POWERUP_SPEED;
-            case POWERUP_TYPES.FREEZE: return CONSTANTS.COLORS.POWERUP_FREEZE;
-            case POWERUP_TYPES.SHIELD: return CONSTANTS.COLORS.POWERUP_SHIELD;
-            case POWERUP_TYPES.SLOWMO: return CONSTANTS.COLORS.POWERUP_SLOWMO;
-            case POWERUP_TYPES.LIFE: return CONSTANTS.COLORS.POWERUP_LIFE;
+            case POWERUP_TYPES.SPEED: return theme.powerupSpeed;
+            case POWERUP_TYPES.FREEZE: return theme.powerupFreeze;
+            case POWERUP_TYPES.SHIELD: return theme.powerupShield;
+            case POWERUP_TYPES.SLOWMO: return theme.powerupSlowmo;
+            case POWERUP_TYPES.LIFE: return theme.powerupLife;
             default: return '#ffffff';
         }
     }
@@ -53,23 +54,45 @@ class PowerUp {
     }
 
     render(ctx) {
+        const theme = themeManager.get();
         const pulseSize = this.size + Math.sin(this.pulsePhase) * 3;
         const color = this.getColor();
 
-        // Glow effect
-        ctx.shadowColor = color;
-        ctx.shadowBlur = 20;
+        if (theme.pixelated) {
+            // Neon theme: Simple circle with glow
+            if (theme.useGlow) {
+                ctx.shadowColor = color;
+                ctx.shadowBlur = theme.glowIntensity + 5;
+            }
+            ctx.fillStyle = color;
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, pulseSize / 2, 0, Math.PI * 2);
+            ctx.fill();
+        } else {
+            // Modern theme: Glossy orb with gradient
+            const gradient = ctx.createRadialGradient(
+                this.x - 3, this.y - 3, 0,
+                this.x, this.y, pulseSize / 2
+            );
+            gradient.addColorStop(0, '#ffffff');
+            gradient.addColorStop(0.4, color);
+            gradient.addColorStop(1, 'rgba(0,0,0,0.3)');
+            ctx.fillStyle = gradient;
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, pulseSize / 2, 0, Math.PI * 2);
+            ctx.fill();
 
-        // Draw circle
-        ctx.fillStyle = color;
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, pulseSize / 2, 0, Math.PI * 2);
-        ctx.fill();
+            // Highlight
+            ctx.fillStyle = 'rgba(255,255,255,0.5)';
+            ctx.beginPath();
+            ctx.arc(this.x - 2, this.y - 2, pulseSize / 6, 0, Math.PI * 2);
+            ctx.fill();
+        }
 
         // Draw symbol
         ctx.shadowBlur = 0;
-        ctx.fillStyle = '#000000';
-        ctx.font = 'bold 10px monospace';
+        ctx.fillStyle = theme.pixelated ? '#000000' : 'rgba(0,0,0,0.8)';
+        ctx.font = `bold ${theme.pixelated ? 10 : 11}px ${theme.font}`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillText(this.getSymbol(), this.x, this.y);
@@ -218,6 +241,7 @@ class PowerUpManager {
 
     // Render active effect indicators
     renderActiveEffects(ctx, currentTime) {
+        const theme = themeManager.get();
         let y = 100;
         const x = CONSTANTS.CANVAS_WIDTH - 120;
 
@@ -226,10 +250,12 @@ class PowerUpManager {
                 const remaining = Math.ceil((effect.endTime - currentTime) / 1000);
                 const color = this.getEffectColor(type);
 
-                ctx.shadowColor = color;
-                ctx.shadowBlur = 10;
+                if (theme.useGlow) {
+                    ctx.shadowColor = color;
+                    ctx.shadowBlur = 10;
+                }
                 ctx.fillStyle = color;
-                ctx.font = '12px "Press Start 2P", monospace';
+                ctx.font = `12px ${theme.font}`;
                 ctx.textAlign = 'right';
                 ctx.fillText(`${type.toUpperCase()}: ${remaining}s`, x + 100, y);
                 ctx.shadowBlur = 0;
@@ -240,11 +266,12 @@ class PowerUpManager {
     }
 
     getEffectColor(type) {
+        const theme = themeManager.get();
         switch (type) {
-            case 'speed': return CONSTANTS.COLORS.POWERUP_SPEED;
-            case 'freeze': return CONSTANTS.COLORS.POWERUP_FREEZE;
-            case 'shield': return CONSTANTS.COLORS.POWERUP_SHIELD;
-            case 'slowmo': return CONSTANTS.COLORS.POWERUP_SLOWMO;
+            case 'speed': return theme.powerupSpeed;
+            case 'freeze': return theme.powerupFreeze;
+            case 'shield': return theme.powerupShield;
+            case 'slowmo': return theme.powerupSlowmo;
             default: return '#ffffff';
         }
     }

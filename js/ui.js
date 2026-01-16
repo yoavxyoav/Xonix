@@ -29,26 +29,33 @@ class UI {
     }
 
     renderMenu(ctx, gameState) {
+        const theme = themeManager.get();
+        const font = theme.font;
+
         // Title
-        ctx.shadowColor = CONSTANTS.COLORS.BORDER_GLOW;
-        ctx.shadowBlur = 30;
-        ctx.fillStyle = CONSTANTS.COLORS.BORDER;
-        ctx.font = '48px "Press Start 2P", monospace';
+        if (theme.useGlow) {
+            ctx.shadowColor = theme.borderGlow;
+            ctx.shadowBlur = 30;
+        }
+        ctx.fillStyle = theme.border;
+        ctx.font = `48px ${font}`;
         ctx.textAlign = 'center';
         ctx.fillText('XONIX', CONSTANTS.CANVAS_WIDTH / 2, 150);
 
-        // Subtitle
-        ctx.shadowColor = CONSTANTS.COLORS.TRAIL_GLOW;
-        ctx.shadowBlur = 15;
-        ctx.fillStyle = CONSTANTS.COLORS.TRAIL;
-        ctx.font = '16px "Press Start 2P", monospace';
-        ctx.fillText('NEON EDITION', CONSTANTS.CANVAS_WIDTH / 2, 200);
+        // Subtitle - shows current theme
+        if (theme.useGlow) {
+            ctx.shadowColor = theme.trailGlow;
+            ctx.shadowBlur = 15;
+        }
+        ctx.fillStyle = theme.trail;
+        ctx.font = `16px ${font}`;
+        ctx.fillText(`${theme.name} EDITION`, CONSTANTS.CANVAS_WIDTH / 2, 200);
 
         ctx.shadowBlur = 0;
 
         // Instructions
-        ctx.fillStyle = CONSTANTS.COLORS.TEXT;
-        ctx.font = '14px "Press Start 2P", monospace';
+        ctx.fillStyle = theme.text;
+        ctx.font = `14px ${font}`;
 
         const instructions = [
             'Use ARROW KEYS to move',
@@ -65,50 +72,59 @@ class UI {
 
         // High score
         if (gameState.highScore > 0) {
-            ctx.shadowColor = CONSTANTS.COLORS.ENEMY_BORDER_GLOW;
-            ctx.shadowBlur = 10;
-            ctx.fillStyle = CONSTANTS.COLORS.ENEMY_BORDER;
+            if (theme.useGlow) {
+                ctx.shadowColor = theme.enemyBorderGlow;
+                ctx.shadowBlur = 10;
+            }
+            ctx.fillStyle = theme.enemyBorder;
             ctx.fillText(`HIGH SCORE: ${gameState.highScore}`, CONSTANTS.CANVAS_WIDTH / 2, 520);
             ctx.shadowBlur = 0;
         }
 
         // Controls hint
         ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
-        ctx.font = '10px "Press Start 2P", monospace';
-        ctx.fillText('P = Pause  |  N = Mute  |  M = Toggle Bar', CONSTANTS.CANVAS_WIDTH / 2, 550);
+        ctx.font = `10px ${font}`;
+        ctx.fillText('P = Pause | N = Mute | M = Bar | T = Theme', CONSTANTS.CANVAS_WIDTH / 2, 550);
 
         // Attribution
         ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
-        ctx.font = '8px "Press Start 2P", monospace';
+        ctx.font = `8px ${font}`;
         ctx.fillText('Original game by Ilan Rav & Dani Katz (1984)', CONSTANTS.CANVAS_WIDTH / 2, 575);
         ctx.fillText('Revamped by Yoav and Claude', CONSTANTS.CANVAS_WIDTH / 2, 590);
     }
 
     renderHUD(ctx, gameState, showProgressBar = true) {
+        const theme = themeManager.get();
+        const font = theme.font;
+
         // Offset to stay inside the border
         const margin = CONSTANTS.CELL_SIZE * CONSTANTS.BORDER_SIZE + 10;
 
-        ctx.font = '12px "Press Start 2P", monospace';
+        ctx.font = `12px ${font}`;
         ctx.textAlign = 'left';
 
         // Level
-        ctx.shadowColor = CONSTANTS.COLORS.BORDER_GLOW;
-        ctx.shadowBlur = 10;
-        ctx.fillStyle = CONSTANTS.COLORS.BORDER;
+        if (theme.useGlow) {
+            ctx.shadowColor = theme.borderGlow;
+            ctx.shadowBlur = 10;
+        }
+        ctx.fillStyle = theme.border;
         ctx.fillText(`LEVEL ${gameState.level}`, margin, margin + 5);
 
         // Score
-        ctx.shadowColor = CONSTANTS.COLORS.TRAIL_GLOW;
-        ctx.fillStyle = CONSTANTS.COLORS.TRAIL;
+        if (theme.useGlow) ctx.shadowColor = theme.trailGlow;
+        ctx.fillStyle = theme.trail;
         ctx.fillText(`SCORE ${gameState.score}`, margin, margin + 25);
 
         ctx.shadowBlur = 0;
 
         // Lives (hearts)
         ctx.textAlign = 'right';
-        ctx.fillStyle = CONSTANTS.COLORS.ENEMY_BASIC;
-        ctx.shadowColor = CONSTANTS.COLORS.ENEMY_BASIC_GLOW;
-        ctx.shadowBlur = 10;
+        ctx.fillStyle = theme.enemyBasic;
+        if (theme.useGlow) {
+            ctx.shadowColor = theme.enemyBasicGlow;
+            ctx.shadowBlur = 10;
+        }
 
         let livesText = '';
         for (let i = 0; i < gameState.lives; i++) {
@@ -120,8 +136,10 @@ class UI {
         const fillPercent = Math.floor(gameState.fillPercentage * 100);
         const requiredPercent = Math.floor(gameState.fillRequired * 100);
 
-        ctx.fillStyle = fillPercent >= requiredPercent ? CONSTANTS.COLORS.PLAYER : CONSTANTS.COLORS.TEXT;
-        ctx.shadowColor = fillPercent >= requiredPercent ? CONSTANTS.COLORS.PLAYER_GLOW : 'transparent';
+        ctx.fillStyle = fillPercent >= requiredPercent ? theme.player : theme.text;
+        if (theme.useGlow) {
+            ctx.shadowColor = fillPercent >= requiredPercent ? theme.playerGlow : 'transparent';
+        }
         ctx.fillText(`${fillPercent}% / ${requiredPercent}%`, CONSTANTS.CANVAS_WIDTH - margin, margin + 25);
 
         ctx.shadowBlur = 0;
@@ -133,6 +151,8 @@ class UI {
     }
 
     renderProgressBar(ctx, current, required) {
+        const theme = themeManager.get();
+
         const barWidth = 200;
         const barHeight = 10;
         const margin = CONSTANTS.CELL_SIZE * CONSTANTS.BORDER_SIZE + 8;
@@ -144,25 +164,30 @@ class UI {
         ctx.fillRect(x, y, barWidth, barHeight);
 
         // Required marker
-        ctx.fillStyle = CONSTANTS.COLORS.ENEMY_BORDER;
+        ctx.fillStyle = theme.enemyBorder;
         ctx.fillRect(x + barWidth * required - 1, y - 2, 2, barHeight + 4);
 
         // Current fill
-        const fillColor = current >= required ? CONSTANTS.COLORS.PLAYER : CONSTANTS.COLORS.TRAIL;
-        ctx.shadowColor = fillColor;
-        ctx.shadowBlur = 5;
+        const fillColor = current >= required ? theme.player : theme.trail;
+        if (theme.useGlow) {
+            ctx.shadowColor = fillColor;
+            ctx.shadowBlur = 5;
+        }
         ctx.fillStyle = fillColor;
         ctx.fillRect(x, y, barWidth * Math.min(current, 1), barHeight);
 
         ctx.shadowBlur = 0;
 
         // Border
-        ctx.strokeStyle = CONSTANTS.COLORS.BORDER;
+        ctx.strokeStyle = theme.border;
         ctx.lineWidth = 1;
         ctx.strokeRect(x, y, barWidth, barHeight);
     }
 
     renderPauseOverlay(ctx) {
+        const theme = themeManager.get();
+        const font = theme.font;
+
         // Darken background
         ctx.fillStyle = 'rgba(0, 0, 0, 0.85)';
         ctx.fillRect(0, 0, CONSTANTS.CANVAS_WIDTH, CONSTANTS.CANVAS_HEIGHT);
@@ -170,16 +195,18 @@ class UI {
         ctx.textAlign = 'center';
 
         // Pause title
-        ctx.shadowColor = CONSTANTS.COLORS.BORDER_GLOW;
-        ctx.shadowBlur = 20;
-        ctx.fillStyle = CONSTANTS.COLORS.BORDER;
-        ctx.font = '32px "Press Start 2P", monospace';
+        if (theme.useGlow) {
+            ctx.shadowColor = theme.borderGlow;
+            ctx.shadowBlur = 20;
+        }
+        ctx.fillStyle = theme.border;
+        ctx.font = `32px ${font}`;
         ctx.fillText('PAUSED', CONSTANTS.CANVAS_WIDTH / 2, 80);
         ctx.shadowBlur = 0;
 
         // Game explanation
-        ctx.fillStyle = CONSTANTS.COLORS.TEXT;
-        ctx.font = '10px "Press Start 2P", monospace';
+        ctx.fillStyle = theme.text;
+        ctx.font = `10px ${font}`;
         const gameInfo = [
             'HOW TO PLAY:',
             '',
@@ -192,25 +219,25 @@ class UI {
         ];
         gameInfo.forEach((line, i) => {
             if (line === 'HOW TO PLAY:') {
-                ctx.fillStyle = CONSTANTS.COLORS.TRAIL;
+                ctx.fillStyle = theme.trail;
             } else {
-                ctx.fillStyle = CONSTANTS.COLORS.TEXT;
+                ctx.fillStyle = theme.text;
             }
             ctx.fillText(line, CONSTANTS.CANVAS_WIDTH / 2, 130 + i * 22);
         });
 
         // Power-ups section
-        ctx.fillStyle = CONSTANTS.COLORS.TRAIL;
-        ctx.font = '10px "Press Start 2P", monospace';
+        ctx.fillStyle = theme.trail;
+        ctx.font = `10px ${font}`;
         ctx.fillText('POWER-UPS:', CONSTANTS.CANVAS_WIDTH / 2, 340);
 
-        ctx.font = '9px "Press Start 2P", monospace';
+        ctx.font = `9px ${font}`;
         const powerups = [
-            { color: CONSTANTS.COLORS.POWERUP_SPEED, text: 'CYAN - Speed Boost (2x speed for 5 sec)' },
-            { color: CONSTANTS.COLORS.POWERUP_FREEZE, text: 'BLUE - Freeze (enemies stop for 3 sec)' },
-            { color: CONSTANTS.COLORS.POWERUP_SHIELD, text: 'GREEN - Shield (invincible for 5 sec)' },
-            { color: CONSTANTS.COLORS.POWERUP_SLOWMO, text: 'ORANGE - Slow-Mo (enemies 0.5x for 5 sec)' },
-            { color: CONSTANTS.COLORS.POWERUP_LIFE, text: 'PINK - Extra Life (+1 life)' }
+            { color: theme.powerupSpeed, text: 'CYAN - Speed Boost (2x speed for 5 sec)' },
+            { color: theme.powerupFreeze, text: 'BLUE - Freeze (enemies stop for 3 sec)' },
+            { color: theme.powerupShield, text: 'GREEN - Shield (invincible for 5 sec)' },
+            { color: theme.powerupSlowmo, text: 'ORANGE - Slow-Mo (enemies 0.5x for 5 sec)' },
+            { color: theme.powerupLife, text: 'PINK - Extra Life (+1 life)' }
         ];
         powerups.forEach((pu, i) => {
             ctx.fillStyle = pu.color;
@@ -218,78 +245,92 @@ class UI {
         });
 
         // Controls
-        ctx.fillStyle = CONSTANTS.COLORS.TEXT;
-        ctx.font = '9px "Press Start 2P", monospace';
+        ctx.fillStyle = theme.text;
+        ctx.font = `9px ${font}`;
         ctx.fillText('CONTROLS: Arrows=Move | Space=Stop | P=Pause', CONSTANTS.CANVAS_WIDTH / 2, 480);
         ctx.fillText('M=Toggle Bar | N=Mute | D=Debug', CONSTANTS.CANVAS_WIDTH / 2, 502);
 
         // Resume hint
-        ctx.shadowColor = CONSTANTS.COLORS.PLAYER_GLOW;
-        ctx.shadowBlur = 10;
-        ctx.fillStyle = CONSTANTS.COLORS.PLAYER;
-        ctx.font = '12px "Press Start 2P", monospace';
+        if (theme.useGlow) {
+            ctx.shadowColor = theme.playerGlow;
+            ctx.shadowBlur = 10;
+        }
+        ctx.fillStyle = theme.player;
+        ctx.font = `12px ${font}`;
         ctx.fillText('Press any key to resume', CONSTANTS.CANVAS_WIDTH / 2, 550);
         ctx.shadowBlur = 0;
     }
 
     renderGameOver(ctx, gameState) {
+        const theme = themeManager.get();
+        const font = theme.font;
+
         // Darken background
         ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
         ctx.fillRect(0, 0, CONSTANTS.CANVAS_WIDTH, CONSTANTS.CANVAS_HEIGHT);
 
         // Game Over text
-        ctx.shadowColor = CONSTANTS.COLORS.ENEMY_BASIC_GLOW;
-        ctx.shadowBlur = 30;
-        ctx.fillStyle = CONSTANTS.COLORS.ENEMY_BASIC;
-        ctx.font = '36px "Press Start 2P", monospace';
+        if (theme.useGlow) {
+            ctx.shadowColor = theme.enemyBasicGlow;
+            ctx.shadowBlur = 30;
+        }
+        ctx.fillStyle = theme.enemyBasic;
+        ctx.font = `36px ${font}`;
         ctx.textAlign = 'center';
         ctx.fillText('GAME OVER', CONSTANTS.CANVAS_WIDTH / 2, CONSTANTS.CANVAS_HEIGHT / 2 - 50);
 
         ctx.shadowBlur = 0;
 
         // Final score
-        ctx.fillStyle = CONSTANTS.COLORS.TEXT;
-        ctx.font = '18px "Press Start 2P", monospace';
+        ctx.fillStyle = theme.text;
+        ctx.font = `18px ${font}`;
         ctx.fillText(`FINAL SCORE: ${gameState.score}`, CONSTANTS.CANVAS_WIDTH / 2, CONSTANTS.CANVAS_HEIGHT / 2 + 10);
 
         // High score
         if (gameState.score >= gameState.highScore && gameState.score > 0) {
-            ctx.shadowColor = CONSTANTS.COLORS.ENEMY_BORDER_GLOW;
-            ctx.shadowBlur = 15;
-            ctx.fillStyle = CONSTANTS.COLORS.ENEMY_BORDER;
+            if (theme.useGlow) {
+                ctx.shadowColor = theme.enemyBorderGlow;
+                ctx.shadowBlur = 15;
+            }
+            ctx.fillStyle = theme.enemyBorder;
             ctx.fillText('NEW HIGH SCORE!', CONSTANTS.CANVAS_WIDTH / 2, CONSTANTS.CANVAS_HEIGHT / 2 + 50);
             ctx.shadowBlur = 0;
         }
 
         // Restart hint
-        ctx.fillStyle = CONSTANTS.COLORS.TEXT;
-        ctx.font = '14px "Press Start 2P", monospace';
+        ctx.fillStyle = theme.text;
+        ctx.font = `14px ${font}`;
         ctx.fillText('Press SPACE to restart', CONSTANTS.CANVAS_WIDTH / 2, CONSTANTS.CANVAS_HEIGHT / 2 + 100);
     }
 
     renderLevelComplete(ctx, gameState) {
+        const theme = themeManager.get();
+        const font = theme.font;
+
         // Darken background
         ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
         ctx.fillRect(0, 0, CONSTANTS.CANVAS_WIDTH, CONSTANTS.CANVAS_HEIGHT);
 
         // Level Complete text
-        ctx.shadowColor = CONSTANTS.COLORS.PLAYER_GLOW;
-        ctx.shadowBlur = 30;
-        ctx.fillStyle = CONSTANTS.COLORS.PLAYER;
-        ctx.font = '30px "Press Start 2P", monospace';
+        if (theme.useGlow) {
+            ctx.shadowColor = theme.playerGlow;
+            ctx.shadowBlur = 30;
+        }
+        ctx.fillStyle = theme.player;
+        ctx.font = `30px ${font}`;
         ctx.textAlign = 'center';
         ctx.fillText('LEVEL COMPLETE!', CONSTANTS.CANVAS_WIDTH / 2, CONSTANTS.CANVAS_HEIGHT / 2 - 50);
 
         ctx.shadowBlur = 0;
 
         // Bonus
-        ctx.fillStyle = CONSTANTS.COLORS.ENEMY_BORDER;
-        ctx.font = '18px "Press Start 2P", monospace';
+        ctx.fillStyle = theme.enemyBorder;
+        ctx.font = `18px ${font}`;
         ctx.fillText(`+${CONSTANTS.SCORE_LEVEL_BONUS} BONUS`, CONSTANTS.CANVAS_WIDTH / 2, CONSTANTS.CANVAS_HEIGHT / 2 + 10);
 
         // Next level hint
-        ctx.fillStyle = CONSTANTS.COLORS.TEXT;
-        ctx.font = '14px "Press Start 2P", monospace';
+        ctx.fillStyle = theme.text;
+        ctx.font = `14px ${font}`;
         ctx.fillText('Press SPACE for next level', CONSTANTS.CANVAS_WIDTH / 2, CONSTANTS.CANVAS_HEIGHT / 2 + 70);
     }
 }

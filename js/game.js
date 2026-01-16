@@ -247,6 +247,8 @@ class Game {
             case 'menu':
                 if (key === ' ') {
                     this.start();
+                } else if (key === 't' || key === 'T') {
+                    themeManager.toggle();
                 }
                 break;
 
@@ -283,6 +285,10 @@ class Game {
                     case 'd':
                     case 'D':
                         this.showDebug = !this.showDebug;
+                        break;
+                    case 't':
+                    case 'T':
+                        themeManager.toggle();
                         break;
                 }
                 break;

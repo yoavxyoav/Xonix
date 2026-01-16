@@ -91,22 +91,63 @@ class Player {
         }
 
         if (this.isDrawing && !newInSafe) {
-            // Add to trail if in new cell
-            if (this.trail.length === 0 ||
-                this.trail[this.trail.length - 1].x !== newGrid.x ||
-                this.trail[this.trail.length - 1].y !== newGrid.y) {
+            // Fill in all cells between current and new position (for high speed)
+            const lastTrailPos = this.trail.length > 0 ? this.trail[this.trail.length - 1] : currentGrid;
 
-                this.trail.push({ x: newGrid.x, y: newGrid.y });
-                this.grid.setTrail(newGrid.x, newGrid.y);
+            // Calculate all cells to fill - only in the direction of movement
+            const cellsToFill = [];
 
-                // Snap player to cell center for cleaner trail alignment
-                const cellCenter = this.grid.gridToPixel(newGrid.x, newGrid.y);
-                if (this.dx !== 0) {
-                    this.y = cellCenter.y; // Snap Y when moving horizontally
+            if (this.dx !== 0) {
+                // Moving horizontally
+                const step = this.dx > 0 ? 1 : -1;
+                let cx = lastTrailPos.x + step;
+                const targetX = newGrid.x;
+                while ((step > 0 && cx <= targetX) || (step < 0 && cx >= targetX)) {
+                    if (!this.grid.isSafeZone(cx, newGrid.y)) {
+                        cellsToFill.push({ x: cx, y: newGrid.y });
+                    }
+                    cx += step;
                 }
-                if (this.dy !== 0) {
-                    this.x = cellCenter.x; // Snap X when moving vertically
+            } else if (this.dy !== 0) {
+                // Moving vertically
+                const step = this.dy > 0 ? 1 : -1;
+                let cy = lastTrailPos.y + step;
+                const targetY = newGrid.y;
+                while ((step > 0 && cy <= targetY) || (step < 0 && cy >= targetY)) {
+                    if (!this.grid.isSafeZone(newGrid.x, cy)) {
+                        cellsToFill.push({ x: newGrid.x, y: cy });
+                    }
+                    cy += step;
                 }
+            }
+
+            // Add all cells to trail
+            for (const cell of cellsToFill) {
+                // Check for self-intersection on each cell
+                if (this.grid.isTrail(cell.x, cell.y) && !this.hasShield) {
+                    const isRecentCell = this.trail.length > 0 &&
+                        this.trail[this.trail.length - 1].x === cell.x &&
+                        this.trail[this.trail.length - 1].y === cell.y;
+                    if (!isRecentCell) {
+                        return { status: 'death', reason: 'self-intersection' };
+                    }
+                }
+
+                if (this.trail.length === 0 ||
+                    this.trail[this.trail.length - 1].x !== cell.x ||
+                    this.trail[this.trail.length - 1].y !== cell.y) {
+                    this.trail.push(cell);
+                    this.grid.setTrail(cell.x, cell.y);
+                }
+            }
+
+            // Snap player to cell center for cleaner trail alignment
+            const cellCenter = this.grid.gridToPixel(newGrid.x, newGrid.y);
+            if (this.dx !== 0) {
+                this.y = cellCenter.y; // Snap Y when moving horizontally
+            }
+            if (this.dy !== 0) {
+                this.x = cellCenter.x; // Snap X when moving vertically
             }
         }
 
@@ -149,42 +190,66 @@ class Player {
     }
 
     render(ctx) {
-        // Draw dark outline for visibility on any background
-        ctx.fillStyle = '#000000';
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, this.size / 2 + 3, 0, Math.PI * 2);
-        ctx.fill();
+        const theme = themeManager.get();
 
-        // Draw player with glow effect
-        ctx.shadowColor = CONSTANTS.COLORS.PLAYER_GLOW;
-        ctx.shadowBlur = 15;
+        if (theme.pixelated) {
+            // Neon theme: Simple circles with glow
+            ctx.fillStyle = '#000000';
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.size / 2 + 3, 0, Math.PI * 2);
+            ctx.fill();
 
-        // Use white color for better visibility on cyan border
-        ctx.fillStyle = '#ffffff';
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, this.size / 2, 0, Math.PI * 2);
-        ctx.fill();
+            if (theme.useGlow) {
+                ctx.shadowColor = theme.playerGlow;
+                ctx.shadowBlur = theme.glowIntensity;
+            }
 
-        // Inner colored dot
-        ctx.fillStyle = CONSTANTS.COLORS.PLAYER;
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, this.size / 4, 0, Math.PI * 2);
-        ctx.fill();
+            ctx.fillStyle = theme.playerOuter;
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.size / 2, 0, Math.PI * 2);
+            ctx.fill();
 
-        // Draw shield effect if active (more visible)
+            ctx.fillStyle = theme.player;
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.size / 4, 0, Math.PI * 2);
+            ctx.fill();
+        } else {
+            // Modern theme: Polished sphere with gradient
+            const gradient = ctx.createRadialGradient(
+                this.x - 3, this.y - 3, 0,
+                this.x, this.y, this.size / 2 + 2
+            );
+            gradient.addColorStop(0, '#ffffff');
+            gradient.addColorStop(0.4, theme.player);
+            gradient.addColorStop(1, theme.playerGlow);
+
+            ctx.fillStyle = gradient;
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.size / 2 + 2, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Subtle highlight
+            ctx.fillStyle = 'rgba(255,255,255,0.6)';
+            ctx.beginPath();
+            ctx.arc(this.x - 2, this.y - 2, this.size / 6, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        // Draw shield effect if active
         if (this.hasShield) {
-            ctx.shadowColor = CONSTANTS.COLORS.POWERUP_SHIELD;
-            ctx.shadowBlur = 20;
-            ctx.strokeStyle = CONSTANTS.COLORS.POWERUP_SHIELD;
-            ctx.lineWidth = 3;
+            ctx.shadowColor = theme.powerupShield;
+            ctx.shadowBlur = theme.useGlow ? 20 : 5;
+            ctx.strokeStyle = theme.powerupShield;
+            ctx.lineWidth = theme.pixelated ? 3 : 2;
             ctx.beginPath();
             ctx.arc(this.x, this.y, this.size + 4, 0, Math.PI * 2);
             ctx.stroke();
-            // Second ring for emphasis
-            ctx.lineWidth = 1;
-            ctx.beginPath();
-            ctx.arc(this.x, this.y, this.size + 8, 0, Math.PI * 2);
-            ctx.stroke();
+            if (theme.pixelated) {
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size + 8, 0, Math.PI * 2);
+                ctx.stroke();
+            }
         }
 
         ctx.shadowBlur = 0;

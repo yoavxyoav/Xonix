@@ -126,24 +126,28 @@ class Grid {
 
     // Render the grid
     render(ctx) {
+        const theme = themeManager.get();
+
         // Draw background
-        ctx.fillStyle = CONSTANTS.COLORS.BACKGROUND;
+        ctx.fillStyle = theme.background;
         ctx.fillRect(0, 0, CONSTANTS.CANVAS_WIDTH, CONSTANTS.CANVAS_HEIGHT);
 
-        // Draw subtle grid lines
-        ctx.strokeStyle = CONSTANTS.COLORS.GRID_LINE;
-        ctx.lineWidth = 0.5;
-        for (let x = 0; x <= this.cols; x++) {
-            ctx.beginPath();
-            ctx.moveTo(x * this.cellSize, 0);
-            ctx.lineTo(x * this.cellSize, CONSTANTS.CANVAS_HEIGHT);
-            ctx.stroke();
-        }
-        for (let y = 0; y <= this.rows; y++) {
-            ctx.beginPath();
-            ctx.moveTo(0, y * this.cellSize);
-            ctx.lineTo(CONSTANTS.CANVAS_WIDTH, y * this.cellSize);
-            ctx.stroke();
+        // Draw subtle grid lines (only in neon theme)
+        if (theme.pixelated) {
+            ctx.strokeStyle = CONSTANTS.COLORS.GRID_LINE;
+            ctx.lineWidth = 0.5;
+            for (let x = 0; x <= this.cols; x++) {
+                ctx.beginPath();
+                ctx.moveTo(x * this.cellSize, 0);
+                ctx.lineTo(x * this.cellSize, CONSTANTS.CANVAS_HEIGHT);
+                ctx.stroke();
+            }
+            for (let y = 0; y <= this.rows; y++) {
+                ctx.beginPath();
+                ctx.moveTo(0, y * this.cellSize);
+                ctx.lineTo(CONSTANTS.CANVAS_WIDTH, y * this.cellSize);
+                ctx.stroke();
+            }
         }
 
         // Draw cells
@@ -154,25 +158,39 @@ class Grid {
                 const py = y * this.cellSize;
 
                 if (cell === CONSTANTS.CELL_BORDER) {
-                    // Border with glow
-                    ctx.shadowColor = CONSTANTS.COLORS.BORDER_GLOW;
-                    ctx.shadowBlur = 5;
-                    ctx.fillStyle = CONSTANTS.COLORS.BORDER;
+                    // Border
+                    if (theme.pixelated && theme.useGlow) {
+                        ctx.shadowColor = theme.borderGlow;
+                        ctx.shadowBlur = theme.glowIntensity / 3;
+                    }
+                    ctx.fillStyle = theme.border;
                     ctx.fillRect(px, py, this.cellSize, this.cellSize);
                     ctx.shadowBlur = 0;
                 } else if (cell === CONSTANTS.CELL_CLAIMED) {
                     // Claimed area
-                    ctx.fillStyle = CONSTANTS.COLORS.CLAIMED;
+                    ctx.fillStyle = theme.claimed;
                     ctx.fillRect(px, py, this.cellSize, this.cellSize);
                 } else if (cell === CONSTANTS.CELL_TRAIL) {
-                    // Trail with glow
-                    ctx.shadowColor = CONSTANTS.COLORS.TRAIL_GLOW;
-                    ctx.shadowBlur = 10;
-                    ctx.fillStyle = CONSTANTS.COLORS.TRAIL;
+                    // Trail
+                    if (theme.pixelated && theme.useGlow) {
+                        ctx.shadowColor = theme.trailGlow;
+                        ctx.shadowBlur = theme.glowIntensity;
+                    }
+                    ctx.fillStyle = theme.trail;
                     ctx.fillRect(px, py, this.cellSize, this.cellSize);
                     ctx.shadowBlur = 0;
                 }
             }
+        }
+
+        // Modern theme: Draw smooth border outline
+        if (!theme.pixelated) {
+            const borderWidth = CONSTANTS.CELL_SIZE * CONSTANTS.BORDER_SIZE;
+            ctx.strokeStyle = theme.border;
+            ctx.lineWidth = 2;
+            ctx.strokeRect(borderWidth, borderWidth,
+                CONSTANTS.CANVAS_WIDTH - borderWidth * 2,
+                CONSTANTS.CANVAS_HEIGHT - borderWidth * 2);
         }
     }
 }
