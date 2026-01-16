@@ -17,14 +17,14 @@ const CONSTANTS = {
     CELL_TRAIL: 3,
 
     // Player settings
-    PLAYER_SPEED: 3,
+    PLAYER_SPEED: 6,
     PLAYER_SIZE: 8,
     INITIAL_LIVES: 3,
 
     // Enemy settings
-    ENEMY_BASE_SPEED: 2,
+    ENEMY_BASE_SPEED: 4,
     ENEMY_SIZE: 8,
-    BORDER_ENEMY_SPEED: 1.5,
+    BORDER_ENEMY_SPEED: 3,
 
     // Game settings
     TARGET_FPS: 60,

@@ -39,47 +39,20 @@ function handleKeyUp(e) {
     game.handleKeyUp(e.key);
 }
 
-function gameLoop() {
-    const now = performance.now();
-
+function gameLoop(timestamp) {
     // Update game state
-    game.update(now);
+    game.update(timestamp);
 
     // Render
-    game.render(ctx, now);
-}
+    game.render(ctx, timestamp);
 
-// Use setInterval for consistent timing (browsers don't throttle this as much)
-let gameInterval;
-let wakeLock = null;
-
-// Request wake lock to prevent browser throttling
-async function requestWakeLock() {
-    try {
-        if ('wakeLock' in navigator) {
-            wakeLock = await navigator.wakeLock.request('screen');
-            console.log('Wake lock acquired');
-        }
-    } catch (err) {
-        console.log('Wake lock failed:', err);
-    }
-}
-
-function startGameLoop() {
-    // Run at ~60fps (16.67ms per frame)
-    gameInterval = setInterval(gameLoop, 16);
+    // Request next frame
+    requestAnimationFrame(gameLoop);
 }
 
 // Start when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
     init();
-    requestWakeLock();
-    startGameLoop();
-});
-
-// Re-acquire wake lock if page becomes visible again
-document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'visible') {
-        requestWakeLock();
-    }
+    // Start game loop with requestAnimationFrame (better for games)
+    requestAnimationFrame(gameLoop);
 });

@@ -24,9 +24,10 @@ class Enemy {
 
 // Basic enemy - bounces around in unclaimed territory
 class BasicEnemy extends Enemy {
-    constructor(x, y) {
+    constructor(x, y, level = 1) {
         super(x, y, 'basic');
-        this.baseSpeed = CONSTANTS.ENEMY_BASE_SPEED;
+        // Speed increases 10% per level
+        this.baseSpeed = CONSTANTS.ENEMY_BASE_SPEED * (1 + (level - 1) * 0.1);
 
         // Random initial direction
         const angle = Math.random() * Math.PI * 2;
@@ -146,9 +147,10 @@ class BasicEnemy extends Enemy {
 // Border enemy - bounces within the safe zone (border + claimed areas)
 // Kills player on contact (even on the border!)
 class BorderEnemy extends Enemy {
-    constructor(x, y) {
+    constructor(x, y, level = 1) {
         super(x, y, 'border');
-        this.baseSpeed = CONSTANTS.BORDER_ENEMY_SPEED * 1.2;
+        // Speed increases 10% per level
+        this.baseSpeed = CONSTANTS.BORDER_ENEMY_SPEED * 1.2 * (1 + (level - 1) * 0.1);
         // Gentler angle - mostly horizontal or vertical with slight diagonal
         const primaryDir = Math.random() > 0.5 ? 1 : -1;
         const secondaryDir = (Math.random() > 0.5 ? 1 : -1) * 0.3; // Less diagonal
@@ -257,7 +259,7 @@ function createEnemiesForLevel(level, grid) {
                   Math.random() * (CONSTANTS.CANVAS_WIDTH - CONSTANTS.CELL_SIZE * (CONSTANTS.BORDER_SIZE + 10));
         const y = CONSTANTS.CELL_SIZE * (CONSTANTS.BORDER_SIZE + 5) +
                   Math.random() * (CONSTANTS.CANVAS_HEIGHT - CONSTANTS.CELL_SIZE * (CONSTANTS.BORDER_SIZE + 10));
-        enemies.push(new BasicEnemy(x, y));
+        enemies.push(new BasicEnemy(x, y, level));
     }
 
     // Create border enemies (bounce within safe zones)
@@ -272,7 +274,7 @@ function createEnemiesForLevel(level, grid) {
             { x: CONSTANTS.CANVAS_WIDTH - borderSize / 2, y: CONSTANTS.CANVAS_HEIGHT / 2 }  // Right-middle
         ];
         const pos = startPositions[i % startPositions.length];
-        enemies.push(new BorderEnemy(pos.x, pos.y));
+        enemies.push(new BorderEnemy(pos.x, pos.y, level));
     }
 
     return enemies;

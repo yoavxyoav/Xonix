@@ -75,7 +75,13 @@ class UI {
         // Controls hint
         ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
         ctx.font = '10px "Press Start 2P", monospace';
-        ctx.fillText('P = Pause  |  N = Mute  |  M = Toggle Bar', CONSTANTS.CANVAS_WIDTH / 2, 570);
+        ctx.fillText('P = Pause  |  N = Mute  |  M = Toggle Bar', CONSTANTS.CANVAS_WIDTH / 2, 550);
+
+        // Attribution
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+        ctx.font = '8px "Press Start 2P", monospace';
+        ctx.fillText('Original game by Ilan Rav & Dani Katz (1984)', CONSTANTS.CANVAS_WIDTH / 2, 575);
+        ctx.fillText('Revamped by Yoav and Claude', CONSTANTS.CANVAS_WIDTH / 2, 590);
     }
 
     renderHUD(ctx, gameState, showProgressBar = true) {

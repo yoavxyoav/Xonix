@@ -24,6 +24,8 @@ class Game {
         this.deathFreeze = 0; // Freeze to show death snapshot
         this.showDebug = false; // Toggle with 'D' key
         this.showProgressBar = true; // Toggle with 'M' key
+        this.debugFps = 0;
+        this.debugTimeScale = 1;
     }
 
     loadHighScore() {
@@ -85,6 +87,10 @@ class Game {
         // Calculate time scale (1.0 = 60fps, higher if slower)
         const targetFrameTime = 1000 / 60; // ~16.67ms
         const timeScale = Math.min(deltaTime / targetFrameTime, 3); // Cap at 3x to prevent tunneling
+
+        // Track for debug display
+        this.debugFps = Math.round(1000 / deltaTime);
+        this.debugTimeScale = timeScale.toFixed(2);
 
         // Death freeze - show snapshot of how death happened
         if (this.deathFreeze > 0) {
@@ -340,6 +346,7 @@ class Game {
             ctx.fillStyle = '#ff0';
             ctx.font = '10px monospace';
             ctx.textAlign = 'center';
+            ctx.fillText(`FPS: ${this.debugFps} | TimeScale: ${this.debugTimeScale}`, CONSTANTS.CANVAS_WIDTH / 2, CONSTANTS.CANVAS_HEIGHT / 2 - 24);
             ctx.fillText(`Player: (${Math.round(this.player.x)}, ${Math.round(this.player.y)}) dx:${this.player.dx} dy:${this.player.dy}`, CONSTANTS.CANVAS_WIDTH / 2, CONSTANTS.CANVAS_HEIGHT / 2 - 8);
             ctx.fillText(`isDrawing: ${this.player.isDrawing} | Screen: ${this.state.screen} | Shield: ${this.player.hasShield}`, CONSTANTS.CANVAS_WIDTH / 2, CONSTANTS.CANVAS_HEIGHT / 2 + 8);
         }
