@@ -66,13 +66,16 @@ class PowerUp {
         ctx.arc(this.x, this.y, pulseSize / 2, 0, Math.PI * 2);
         ctx.fill();
 
-        // Draw symbol
+        // Draw symbol (centered with slight vertical adjustment for visual balance)
         ctx.shadowBlur = 0;
         ctx.fillStyle = '#000000';
-        ctx.font = 'bold 10px monospace';
+        ctx.font = 'bold 9px Arial, sans-serif';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillText(this.getSymbol(), this.x, this.y);
+        const symbol = this.getSymbol();
+        // Heart symbol needs slight upward nudge for visual centering
+        const yOffset = symbol === '♥' ? -1 : 0;
+        ctx.fillText(symbol, this.x, this.y + yOffset);
     }
 }
 
