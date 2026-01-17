@@ -17,9 +17,10 @@ class TouchControls {
     }
 
     isTouchDevice() {
-        return ('ontouchstart' in window) ||
-               (navigator.maxTouchPoints > 0) ||
-               (navigator.msMaxTouchPoints > 0);
+        // Use same check as CSS media query for consistency
+        return window.matchMedia('(pointer: coarse)').matches ||
+               ('ontouchstart' in window) ||
+               (navigator.maxTouchPoints > 0);
     }
 
     init() {
