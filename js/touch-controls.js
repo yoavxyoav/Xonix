@@ -190,8 +190,66 @@ class TouchControls {
 
         if (isPortrait) {
             this.orientationHint.classList.add('visible');
+            // Reset viewport to normal when in portrait
+            this.setViewportScale(1.0);
         } else {
             this.orientationHint.classList.remove('visible');
+            // Zoom out viewport to fit canvas + controls in landscape
+            this.adjustViewportForLandscape();
+        }
+    }
+
+    setViewportScale(scale) {
+        const viewport = document.querySelector('meta[name="viewport"]');
+        if (viewport) {
+            viewport.setAttribute('content',
+                `width=device-width, initial-scale=${scale}, minimum-scale=0.1, maximum-scale=1.0, user-scalable=no, viewport-fit=cover`);
+        }
+    }
+
+    adjustViewportForLandscape() {
+        // Calculate the optimal viewport scale to fit canvas + controls
+        // Canvas at base: 800px wide, scaled by CSS to ~0.45 = 360px
+        // Left control (STOP): ~100px + margin
+        // Right control (D-PAD): ~160px + margin
+        // Total minimum width needed: ~120 + 360 + 180 = 660px
+
+        const screenWidth = window.innerWidth;
+        const screenHeight = window.innerHeight;
+
+        // Base dimensions of the game container (800x600 canvas)
+        const canvasBaseWidth = 800;
+        const canvasBaseHeight = 600;
+
+        // Space needed for controls on each side
+        const controlsWidth = 300; // ~120px left + ~180px right with margins
+        const controlsHeight = 180; // Controls height requirement
+
+        // Calculate available space for canvas after controls
+        const availableWidth = screenWidth - controlsWidth;
+        const availableHeight = screenHeight - 20; // Some padding
+
+        // Calculate scale that would fit the canvas
+        const scaleX = availableWidth / canvasBaseWidth;
+        const scaleY = availableHeight / canvasBaseHeight;
+        const canvasScale = Math.min(scaleX, scaleY, 0.5); // Cap at 0.5 for reasonable size
+
+        // Calculate total width we need
+        const totalNeededWidth = (canvasBaseWidth * canvasScale) + controlsWidth;
+
+        // If screen is too narrow, zoom out the viewport
+        if (totalNeededWidth > screenWidth) {
+            const viewportScale = Math.max(0.4, screenWidth / totalNeededWidth);
+            this.setViewportScale(viewportScale);
+        } else {
+            this.setViewportScale(1.0);
+        }
+
+        // Update game container scale dynamically
+        const gameContainer = document.querySelector('.game-container');
+        if (gameContainer) {
+            const finalScale = Math.max(0.3, Math.min(canvasScale, 0.45));
+            gameContainer.style.transform = `scale(${finalScale})`;
         }
     }
 
