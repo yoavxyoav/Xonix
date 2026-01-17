@@ -184,12 +184,14 @@ class TouchControls {
         this.activeButton = null;
     }
 
+    isLandscape() {
+        return window.innerWidth > window.innerHeight;
+    }
+
     checkOrientation() {
         if (!this.enabled) return;
 
-        const isPortrait = window.innerHeight > window.innerWidth;
-
-        if (isPortrait) {
+        if (!this.isLandscape()) {
             this.orientationHint.classList.add('visible');
             // Hide tap area in portrait
             this.tapArea.classList.remove('visible');
@@ -276,9 +278,8 @@ class TouchControls {
             this.tapArea.innerHTML = '<span>TOUCH ANYWHERE TO CONTINUE</span>';
         }
 
-        // Update visibility based on orientation
-        const isLandscape = window.innerWidth > window.innerHeight;
-        if (this.tapAreaShouldShow && isLandscape) {
+        // Update visibility based on orientation (reuse shared method)
+        if (this.tapAreaShouldShow && this.isLandscape()) {
             this.tapArea.classList.add('visible');
         } else {
             this.tapArea.classList.remove('visible');
