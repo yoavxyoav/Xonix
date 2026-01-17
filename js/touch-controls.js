@@ -52,7 +52,7 @@ class TouchControls {
     createTapArea() {
         // Create full-screen tap-to-start overlay
         this.tapArea = document.createElement('div');
-        this.tapArea.className = 'touch-tap-area'; // Visibility controlled by checkOrientation
+        this.tapArea.className = 'touch-tap-area visible'; // Start visible, CSS media query controls display
         this.tapArea.innerHTML = '<span>TOUCH ANYWHERE TO START</span>';
         this.tapAreaShouldShow = true; // Track if tap area should be shown (based on game state)
         document.body.appendChild(this.tapArea);
@@ -193,19 +193,15 @@ class TouchControls {
 
         if (!this.isLandscape()) {
             this.orientationHint.classList.add('visible');
-            // Hide tap area in portrait
-            this.tapArea.classList.remove('visible');
             // Reset viewport to normal when in portrait
             this.setViewportScale(1.0);
         } else {
             this.orientationHint.classList.remove('visible');
-            // Show tap area in landscape if it should be shown
-            if (this.tapAreaShouldShow) {
-                this.tapArea.classList.add('visible');
-            }
             // Zoom out viewport to fit canvas + controls in landscape
             this.adjustViewportForLandscape();
         }
+        // Note: tap area visibility is controlled by CSS media query + .visible class
+        // JS only manages the .visible class based on game state (tapAreaShouldShow)
     }
 
     setViewportScale(scale) {
@@ -278,8 +274,8 @@ class TouchControls {
             this.tapArea.innerHTML = '<span>TOUCH ANYWHERE TO CONTINUE</span>';
         }
 
-        // Update visibility based on orientation (reuse shared method)
-        if (this.tapAreaShouldShow && this.isLandscape()) {
+        // JS manages the .visible class, CSS media query controls actual display
+        if (this.tapAreaShouldShow) {
             this.tapArea.classList.add('visible');
         } else {
             this.tapArea.classList.remove('visible');
