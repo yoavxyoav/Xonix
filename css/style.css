@@ -1,5 +1,19 @@
 /* Xonix Neon Edition - Styles */
 
+:root {
+    /* Canvas dimensions and scaling for mobile layout calculations */
+    --canvas-base-width: 800px;
+    --canvas-scale: 0.45;
+    --canvas-scaled-width: 360px; /* 800px * 0.45 */
+    --canvas-half-width: 180px;   /* Half of scaled width, used for centering */
+
+    /* Control sizes */
+    --stop-btn-size: 120px;
+    --stop-btn-half: 60px;
+    --dpad-size: 160px;
+    --dpad-half: 80px;
+}
+
 * {
     margin: 0;
     padding: 0;
@@ -164,9 +178,6 @@ body::before {
     height: 100%;
     pointer-events: none;
     z-index: 1000;
-    justify-content: space-between;
-    align-items: center;
-    padding: 10px;
     touch-action: none;
     -ms-touch-action: none;
 }
@@ -211,16 +222,26 @@ body::before {
     box-shadow:
         0 0 20px rgba(0, 255, 255, 0.5),
         inset 0 0 15px rgba(0, 255, 255, 0.2);
-    transform: scale(0.95);
+    /* No transform - only luminosity change */
 }
 
-/* Stop button (left side) */
+/* Stop button (left side) - centered between left edge and canvas
+ *
+ * Layout math:
+ * - Canvas (360px) is centered at 50%, so left edge of canvas is at (50% - 180px)
+ * - Left side area spans from 0 to (50% - 180px)
+ * - Center of left area: (50% - 180px) / 2 = 25% - 90px
+ * - To center the button, place its left edge at: center - half_button_width
+ *   = (25% - 90px) - 60px = 25% - 150px
+ */
 .touch-stop {
-    width: 100px;
-    height: 100px;
-    font-size: 12px;
-    margin-left: 10px;
-    flex-shrink: 0;
+    position: absolute;
+    left: calc(25% - var(--canvas-half-width) / 2 - var(--stop-btn-half));
+    top: 50%;
+    transform: translateY(-50%);
+    width: var(--stop-btn-size);
+    height: var(--stop-btn-size);
+    font-size: 14px;
     touch-action: none;
     -ms-touch-action: none;
 }
@@ -229,13 +250,22 @@ body::before {
     text-shadow: 0 0 10px rgba(0, 255, 255, 0.8);
 }
 
-/* D-pad container (right side) */
+/* D-pad container (right side) - centered between canvas and right edge
+ *
+ * Layout math:
+ * - Canvas (360px) is centered at 50%, so right edge of canvas is at (50% + 180px)
+ * - Right side area spans from (50% + 180px) to 100%
+ * - Distance from right edge to center of right area: 25% - 90px
+ * - To center the d-pad, place its right edge at: center - half_dpad_width
+ *   = (25% - 90px) - 80px = 25% - 170px from right edge
+ */
 .touch-dpad {
-    position: relative;
-    width: 160px;
-    height: 160px;
-    margin-right: 10px;
-    flex-shrink: 0;
+    position: absolute;
+    right: calc(25% - var(--canvas-half-width) / 2 - var(--dpad-half));
+    top: 50%;
+    transform: translateY(-50%);
+    width: var(--dpad-size);
+    height: var(--dpad-size);
     touch-action: none;
     -ms-touch-action: none;
 }
@@ -324,11 +354,9 @@ body::before {
     animation: tapPulse 2s ease-in-out infinite;
 }
 
-/* Only show tap area on touch devices in landscape */
-@media (pointer: coarse) and (orientation: landscape) {
-    .touch-tap-area.visible {
-        display: flex;
-    }
+/* Only show tap area on touch devices in landscape - controlled via JS */
+.touch-tap-area.visible {
+    display: flex;
 }
 
 @keyframes tapPulse {
@@ -391,21 +419,15 @@ body::before {
 
 /* Landscape mobile adjustments - controls beside canvas */
 @media (pointer: coarse) and (orientation: landscape) {
-    .touch-controls {
-        padding: 5px 10px;
-    }
-
     .touch-stop {
-        width: 100px;
-        height: 100px;
-        font-size: 11px;
-        margin-left: 10px;
+        width: var(--stop-btn-size);
+        height: var(--stop-btn-size);
+        font-size: 13px;
     }
 
     .touch-dpad {
-        width: 160px;
-        height: 160px;
-        margin-right: 10px;
+        width: var(--dpad-size);
+        height: var(--dpad-size);
     }
 
     .touch-arrow {
