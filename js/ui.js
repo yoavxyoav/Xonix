@@ -3,9 +3,14 @@
 class UI {
     constructor() {
         this.fontLoaded = false;
-        this.isTouchDevice = ('ontouchstart' in window) ||
-                            (navigator.maxTouchPoints > 0) ||
-                            (navigator.msMaxTouchPoints > 0);
+    }
+
+    // Check if touch device - evaluated each time for reliability
+    get isTouchDevice() {
+        // Use same check as CSS media query for consistency
+        return window.matchMedia('(pointer: coarse)').matches ||
+               ('ontouchstart' in window) ||
+               (navigator.maxTouchPoints > 0);
     }
 
     render(ctx, gameState, showProgressBar = true) {

@@ -54,17 +54,20 @@ class TouchControls {
         const canvas = document.getElementById('gameCanvas');
         if (!canvas) return;
 
-        // Track if we should handle canvas touches (only on menu/gameover/levelcomplete screens)
-        this.canvasTouchEnabled = true;
+        const triggerSpace = () => {
+            // Dispatch actual keyboard events to document (same path as real key presses)
+            const keydown = new KeyboardEvent('keydown', { key: ' ', bubbles: true });
+            const keyup = new KeyboardEvent('keyup', { key: ' ', bubbles: true });
+            document.dispatchEvent(keydown);
+            setTimeout(() => document.dispatchEvent(keyup), 100);
+        };
 
         const handleCanvasTouch = (e) => {
             // Only handle if on a screen that accepts tap to start
             const validScreens = ['menu', 'gameover', 'levelcomplete'];
-            if (validScreens.includes(this.game.screen)) {
+            if (this.game && validScreens.includes(this.game.screen)) {
                 e.preventDefault();
-                // Simulate space key press
-                this.game.handleKeyDown(' ');
-                setTimeout(() => this.game.handleKeyUp(' '), 100);
+                triggerSpace();
             }
         };
 
