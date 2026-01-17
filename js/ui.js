@@ -64,7 +64,9 @@ class UI {
             'Use D-PAD to move',
             'Capture territory by drawing lines',
             'Avoid enemies!',
-            'Fill the required % to advance'
+            'Fill the required % to advance',
+            '',
+            'TAP SCREEN TO START'
         ] : [
             'Use ARROW KEYS to move',
             'Capture territory by drawing lines',
@@ -307,12 +309,10 @@ class UI {
             ctx.shadowBlur = 0;
         }
 
-        // Restart hint - only on non-touch devices
-        if (!this.isTouchDevice) {
-            ctx.fillStyle = theme.text;
-            ctx.font = `14px ${font}`;
-            ctx.fillText('Press SPACE to restart', CONSTANTS.CANVAS_WIDTH / 2, CONSTANTS.CANVAS_HEIGHT / 2 + 100);
-        }
+        // Restart hint
+        ctx.fillStyle = theme.text;
+        ctx.font = `14px ${font}`;
+        ctx.fillText(this.isTouchDevice ? 'TAP TO RETRY' : 'Press SPACE to restart', CONSTANTS.CANVAS_WIDTH / 2, CONSTANTS.CANVAS_HEIGHT / 2 + 100);
     }
 
     renderLevelComplete(ctx, gameState) {
@@ -340,11 +340,9 @@ class UI {
         ctx.font = `18px ${font}`;
         ctx.fillText(`+${CONSTANTS.SCORE_LEVEL_BONUS} BONUS`, CONSTANTS.CANVAS_WIDTH / 2, CONSTANTS.CANVAS_HEIGHT / 2 + 10);
 
-        // Next level hint - only on non-touch devices
-        if (!this.isTouchDevice) {
-            ctx.fillStyle = theme.text;
-            ctx.font = `14px ${font}`;
-            ctx.fillText('Press SPACE for next level', CONSTANTS.CANVAS_WIDTH / 2, CONSTANTS.CANVAS_HEIGHT / 2 + 70);
-        }
+        // Next level hint
+        ctx.fillStyle = theme.text;
+        ctx.font = `14px ${font}`;
+        ctx.fillText(this.isTouchDevice ? 'TAP TO CONTINUE' : 'Press SPACE for next level', CONSTANTS.CANVAS_WIDTH / 2, CONSTANTS.CANVAS_HEIGHT / 2 + 70);
     }
 }

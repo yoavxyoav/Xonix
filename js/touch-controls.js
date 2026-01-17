@@ -25,7 +25,7 @@ class TouchControls {
     init() {
         this.enabled = true;
         this.createOrientationHint();
-        this.createTapArea();
+        this.setupCanvasTouch();
         this.createControls();
         this.attachEventListeners();
 
@@ -49,39 +49,27 @@ class TouchControls {
         document.body.appendChild(this.orientationHint);
     }
 
-    createTapArea() {
-        // Use existing tap area from HTML (for reliability on iOS)
-        this.tapArea = document.getElementById('tapArea');
-        if (!this.tapArea) {
-            // Fallback: create if not in HTML
-            this.tapArea = document.createElement('div');
-            this.tapArea.id = 'tapArea';
-            this.tapArea.className = 'touch-tap-area visible';
-            this.tapArea.innerHTML = '<span>TOUCH ANYWHERE TO START</span>';
-            document.body.appendChild(this.tapArea);
-        }
-        this.tapAreaShouldShow = true;
+    setupCanvasTouch() {
+        // Add touch events directly to the canvas for starting/continuing game
+        const canvas = document.getElementById('gameCanvas');
+        if (!canvas) return;
 
-        // Handle tap anywhere to start - both touch and click for iOS compatibility
-        const handleStart = (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            this.game.handleKeyDown(' ');
-        };
-        const handleEnd = (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            this.game.handleKeyUp(' ');
+        // Track if we should handle canvas touches (only on menu/gameover/levelcomplete screens)
+        this.canvasTouchEnabled = true;
+
+        const handleCanvasTouch = (e) => {
+            // Only handle if on a screen that accepts tap to start
+            const validScreens = ['menu', 'gameover', 'levelcomplete'];
+            if (validScreens.includes(this.game.screen)) {
+                e.preventDefault();
+                // Simulate space key press
+                this.game.handleKeyDown(' ');
+                setTimeout(() => this.game.handleKeyUp(' '), 100);
+            }
         };
 
-        this.tapArea.addEventListener('touchstart', handleStart, { passive: false });
-        this.tapArea.addEventListener('touchend', handleEnd, { passive: false });
-        // Click fallback for iOS
-        this.tapArea.addEventListener('click', (e) => {
-            e.preventDefault();
-            this.game.handleKeyDown(' ');
-            setTimeout(() => this.game.handleKeyUp(' '), 100);
-        });
+        canvas.addEventListener('touchstart', handleCanvasTouch, { passive: false });
+        canvas.addEventListener('click', handleCanvasTouch); // Click fallback
     }
 
     createControls() {
@@ -273,28 +261,9 @@ class TouchControls {
         }
     }
 
-    // Called by game to update tap area visibility based on game state
+    // Called by game to update state - canvas touch is handled automatically
     updateGameState(screen) {
-        if (!this.enabled) return;
-
-        // Show tap area on menu, gameover, levelcomplete screens
-        this.tapAreaShouldShow = ['menu', 'gameover', 'levelcomplete'].includes(screen);
-
-        // Update text based on screen
-        if (screen === 'menu') {
-            this.tapArea.innerHTML = '<span>TOUCH ANYWHERE TO START</span>';
-        } else if (screen === 'gameover') {
-            this.tapArea.innerHTML = '<span>TOUCH ANYWHERE TO RETRY</span>';
-        } else if (screen === 'levelcomplete') {
-            this.tapArea.innerHTML = '<span>TOUCH ANYWHERE TO CONTINUE</span>';
-        }
-
-        // JS manages the .visible class, CSS media query controls actual display
-        if (this.tapAreaShouldShow) {
-            this.tapArea.classList.add('visible');
-        } else {
-            this.tapArea.classList.remove('visible');
-        }
+        // No longer need to manage tap area - canvas touch checks game.screen directly
     }
 
     show() {
