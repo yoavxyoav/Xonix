@@ -50,13 +50,13 @@ class TouchControls {
     }
 
     createTapArea() {
-        // Create tap-to-start overlay
+        // Create full-screen tap-to-start overlay
         this.tapArea = document.createElement('div');
         this.tapArea.className = 'touch-tap-area';
-        this.tapArea.innerHTML = '<span>TAP TO START</span>';
+        this.tapArea.innerHTML = '<span>TOUCH ANYWHERE TO START</span>';
         document.body.appendChild(this.tapArea);
 
-        // Handle tap to start
+        // Handle tap anywhere to start
         this.tapArea.addEventListener('touchstart', (e) => {
             e.preventDefault();
             this.game.handleKeyDown(' ');
@@ -264,11 +264,11 @@ class TouchControls {
             this.tapArea.classList.add('visible');
             // Update text based on screen
             if (screen === 'menu') {
-                this.tapArea.innerHTML = '<span>TAP TO START</span>';
+                this.tapArea.innerHTML = '<span>TOUCH ANYWHERE TO START</span>';
             } else if (screen === 'gameover') {
-                this.tapArea.innerHTML = '<span>TAP TO RETRY</span>';
+                this.tapArea.innerHTML = '<span>TOUCH ANYWHERE TO RETRY</span>';
             } else if (screen === 'levelcomplete') {
-                this.tapArea.innerHTML = '<span>TAP TO CONTINUE</span>';
+                this.tapArea.innerHTML = '<span>TOUCH ANYWHERE TO CONTINUE</span>';
             }
         } else {
             this.tapArea.classList.remove('visible');
