@@ -310,6 +310,7 @@ body::before {
     align-items: center;
     padding-bottom: 50px;
     touch-action: none;
+    pointer-events: auto;
 }
 
 .touch-tap-area span {
@@ -323,8 +324,11 @@ body::before {
     animation: tapPulse 2s ease-in-out infinite;
 }
 
-.touch-tap-area.visible {
-    display: flex;
+/* Only show tap area on touch devices in landscape */
+@media (pointer: coarse) and (orientation: landscape) {
+    .touch-tap-area.visible {
+        display: flex;
+    }
 }
 
 @keyframes tapPulse {
