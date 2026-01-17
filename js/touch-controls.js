@@ -50,23 +50,38 @@ class TouchControls {
     }
 
     createTapArea() {
-        // Create full-screen tap-to-start overlay
-        this.tapArea = document.createElement('div');
-        this.tapArea.className = 'touch-tap-area visible'; // Start visible, CSS media query controls display
-        this.tapArea.innerHTML = '<span>TOUCH ANYWHERE TO START</span>';
-        this.tapAreaShouldShow = true; // Track if tap area should be shown (based on game state)
-        document.body.appendChild(this.tapArea);
+        // Use existing tap area from HTML (for reliability on iOS)
+        this.tapArea = document.getElementById('tapArea');
+        if (!this.tapArea) {
+            // Fallback: create if not in HTML
+            this.tapArea = document.createElement('div');
+            this.tapArea.id = 'tapArea';
+            this.tapArea.className = 'touch-tap-area visible';
+            this.tapArea.innerHTML = '<span>TOUCH ANYWHERE TO START</span>';
+            document.body.appendChild(this.tapArea);
+        }
+        this.tapAreaShouldShow = true;
 
-        // Handle tap anywhere to start
-        this.tapArea.addEventListener('touchstart', (e) => {
+        // Handle tap anywhere to start - both touch and click for iOS compatibility
+        const handleStart = (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            this.game.handleKeyDown(' ');
+        };
+        const handleEnd = (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            this.game.handleKeyUp(' ');
+        };
+
+        this.tapArea.addEventListener('touchstart', handleStart, { passive: false });
+        this.tapArea.addEventListener('touchend', handleEnd, { passive: false });
+        // Click fallback for iOS
+        this.tapArea.addEventListener('click', (e) => {
             e.preventDefault();
             this.game.handleKeyDown(' ');
-        }, { passive: false });
-
-        this.tapArea.addEventListener('touchend', (e) => {
-            e.preventDefault();
-            this.game.handleKeyUp(' ');
-        }, { passive: false });
+            setTimeout(() => this.game.handleKeyUp(' '), 100);
+        });
     }
 
     createControls() {
