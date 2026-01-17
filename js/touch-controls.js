@@ -52,7 +52,7 @@ class TouchControls {
     createTapArea() {
         // Create full-screen tap-to-start overlay
         this.tapArea = document.createElement('div');
-        this.tapArea.className = 'touch-tap-area';
+        this.tapArea.className = 'touch-tap-area visible'; // Show immediately on load
         this.tapArea.innerHTML = '<span>TOUCH ANYWHERE TO START</span>';
         document.body.appendChild(this.tapArea);
 

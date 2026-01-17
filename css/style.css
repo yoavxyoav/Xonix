@@ -310,6 +310,7 @@ body::before {
     align-items: center;
     padding-bottom: 50px;
     touch-action: none;
+    pointer-events: auto;
 }
 
 .touch-tap-area span {
